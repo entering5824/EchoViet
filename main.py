@@ -78,7 +78,7 @@ if 'audio_info' not in st.session_state:
 
 # ========== TRANG CHỦ ==========
 if page == "🏠 Trang chủ":
-    st.markdown('<div class="main-header">Hệ Thống Chuyển Giọng Nói Tiếng Việt Sang Văn Bản</div>', 
+    st.markdown('<div class="main-header">Topic 7. Designing and Developing a Vietnamese Speech to Text System for Automatic Meeting Transcription</div>', 
                 unsafe_allow_html=True)
     
     st.markdown("""

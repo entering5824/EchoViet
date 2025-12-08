@@ -2,12 +2,7 @@
 
 ## Cài đặt nhanh
 
-1. **Cài FFmpeg** (nếu chưa có):
-   - Windows: `choco install ffmpeg` hoặc tải từ https://ffmpeg.org
-   - Linux: `sudo apt-get install ffmpeg`
-   - Mac: `brew install ffmpeg`
-
-2. **Cài đặt Python packages**:
+1. **Cài đặt Python packages** (FFmpeg sẽ tự động tải):
 ```bash
 pip install -r requirements.txt
 ```

@@ -27,16 +27,20 @@ Hệ thống chuyển đổi giọng nói tiếng Việt thành văn bản tự 
 
 ### Yêu cầu:
 - Python 3.8+
-- FFmpeg (để xử lý audio)
+- FFmpeg (tự động tải qua static-ffmpeg)
 
-### Cài đặt FFmpeg:
+### FFmpeg Setup:
+
+**Tự động (Khuyến nghị):**
+Hệ thống tự động tải và sử dụng static FFmpeg từ GitHub thông qua thư viện `static-ffmpeg`. 
+Không cần cài đặt thủ công - hoạt động trên Streamlit Cloud và môi trường local.
+
+**Cài đặt thủ công (Tùy chọn):**
+Nếu muốn sử dụng system FFmpeg thay vì static version:
 
 **Windows:**
 ```bash
-# Sử dụng chocolatey
 choco install ffmpeg
-
-# Hoặc tải từ https://ffmpeg.org/download.html
 ```
 
 **Linux:**
@@ -160,7 +164,9 @@ pip install openai-whisper
 ```
 
 ### Lỗi FFmpeg:
-Đảm bảo đã cài đặt FFmpeg và có trong PATH.
+Hệ thống tự động tải static FFmpeg. Nếu gặp lỗi:
+- Kiểm tra kết nối internet (lần đầu cần tải FFmpeg)
+- Hoặc cài đặt FFmpeg thủ công và đảm bảo có trong PATH
 
 ### Lỗi "CUDA out of memory":
 Sử dụng model nhỏ hơn (tiny hoặc base) hoặc xử lý audio ngắn hơn.

@@ -10,6 +10,11 @@ from datetime import datetime
 import io
 import soundfile as sf
 
+# Setup static FFmpeg trước khi import các module khác
+# Silent mode để tránh hiển thị thông báo khi chưa có Streamlit context
+from ffmpeg_setup import ensure_ffmpeg
+ensure_ffmpeg(silent=True)
+
 # Import các module tự tạo
 from audio_processor import (
     load_audio, preprocess_audio, plot_waveform, 

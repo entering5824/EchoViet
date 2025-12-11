@@ -70,6 +70,13 @@ page = st.sidebar.radio(
     ]
 )
 
+base = os.path.dirname(__file__)      # thư mục chứa file .py
+img_path = os.path.join(base, "assets", "logo.webp")
+
+if os.path.exists(img_path):
+    st.sidebar.image(img_path, width=110)
+
+
 # Initialize session state
 if 'audio_data' not in st.session_state:
     st.session_state.audio_data = None

@@ -20,9 +20,9 @@ render_sidebar()
 
 st.header("🔬 ASR Model Benchmark")
 st.markdown("""
-### So sánh nhiều mô hình ASR
+### So sánh Whisper và PhoWhisper
 
-Trang này cho phép bạn chạy đánh giá chất lượng để so sánh giữa các mô hình ASR khác nhau.
+Trang này cho phép bạn chạy đánh giá chất lượng để so sánh giữa Whisper và PhoWhisper.
 
 **Yêu cầu:**
 - Tạo thư mục `test_audio/` trong project root
@@ -97,18 +97,17 @@ if st.button("🚀 Chạy đánh giá", type="primary"):
                 st.info("💡 Bạn vẫn có thể chạy đánh giá với các mô hình đã sẵn sàng.")
             
             with st.spinner("Đang chạy đánh giá... (có thể mất vài phút)"):
-                st.info("💡 Tính năng benchmark đầy đủ đang được phát triển. Hiện tại hỗ trợ Whisper và PhoWhisper.")
                 try:
-                    # Run evaluation script (currently supports Whisper and PhoWhisper)
+                    # Run evaluation script (supports Whisper and PhoWhisper)
                     script_path = os.path.join(
                         os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                         "core", "asr", "evaluate_models.py"
                     )
                     
-                    # Filter to supported models for now
+                    # Filter to supported models
                     supported = [m for m in selected_models if m in ["whisper", "phowhisper"]]
                     if not supported:
-                        st.error("❌ Benchmark script hiện chỉ hỗ trợ Whisper và PhoWhisper.")
+                        st.error("❌ Chỉ hỗ trợ Whisper và PhoWhisper.")
                     else:
                         whisper_size = model_configs.get("whisper", "large") if "whisper" in supported else "large"
                         phowhisper_size = model_configs.get("phowhisper", "medium") if "phowhisper" in supported else "medium"

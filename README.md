@@ -182,15 +182,9 @@ uvicorn core.api.server:app --host 0.0.0.0 --port 8000
 - **Streamlit**: Framework web app
 - **ASR Models**:
   - OpenAI Whisper (Transformer seq2seq)
-  - PhoWhisper (Whisper fine-tune) 🌟
-  - Wav2Vec 2.0 (Self-supervised)
-  - DeepSpeech 2 (CTC)
-  - QuartzNet/NeMo (CNN)
-  - Wav2Letter++ (CNN)
-  - Kaldi (HMM-GMM)
+  - PhoWhisper (Whisper fine-tune) 🌟 - Tối ưu cho tiếng Việt
 - **Frameworks**:
-  - HuggingFace Transformers (PhoWhisper, Wav2Vec 2.0)
-  - NeMo Toolkit (QuartzNet)
+  - HuggingFace Transformers (PhoWhisper)
   - OpenAI Whisper API
 - **Audio Processing**: Librosa, PyDub, SoundFile
 - **Visualization**: Matplotlib, Seaborn
@@ -200,7 +194,7 @@ uvicorn core.api.server:app --host 0.0.0.0 --port 8000
 
 ## 📝 Chọn mô hình
 
-Hệ thống hỗ trợ **7 mô hình ASR** khác nhau:
+Hệ thống hỗ trợ **2 mô hình ASR** chính:
 
 ### 🌟 PhoWhisper (VinAI Research) - **Khuyến nghị cho tiếng Việt**
 
@@ -210,6 +204,7 @@ Mô hình được tinh chỉnh đặc biệt cho tiếng Việt, đạt hiệu 
 - **Sizes**: small, medium, base
 - **Khuyến nghị**: medium (cân bằng tốt)
 - **Ưu điểm**: Tối ưu cho tiếng Việt, độ chính xác cao nhất
+- **Vietnamese support**: ✅ Có
 
 ### Whisper (OpenAI)
 
@@ -217,53 +212,9 @@ Mô hình ASR đa ngôn ngữ, benchmark chuẩn:
 
 - **Type**: Transformer seq2seq
 - **Sizes**: tiny, base, small, medium, large
+- **Khuyến nghị**: base (cân bằng tốt)
 - **Ưu điểm**: Hỗ trợ đa ngôn ngữ, dễ sử dụng
 - **Vietnamese support**: ✅ Có
-
-### Wav2Vec 2.0 (Facebook)
-
-Mô hình self-supervised learning, hiện đại:
-
-- **Type**: Transformer-based self-supervised
-- **Sizes**: base, large
-- **Ưu điểm**: Accuracy cao, hiện đại
-- **Vietnamese support**: ⚠️ Cần fine-tuned model
-
-### DeepSpeech 2 (Mozilla)
-
-Mô hình CTC cơ bản:
-
-- **Type**: CTC (Connectionist Temporal Classification)
-- **Ưu điểm**: Dễ hiểu về CTC và decoding
-- **Vietnamese support**: ⚠️ Cần model tiếng Việt
-- **Lưu ý**: Cần model file (.pbmm)
-
-### QuartzNet (NVIDIA NeMo)
-
-Mô hình CNN mạnh và nhẹ:
-
-- **Type**: CNN
-- **Sizes**: 15x5, 5x5
-- **Ưu điểm**: Mạnh và nhẹ nhất trong CNN-based
-- **Vietnamese support**: ⚠️ Cần model tiếng Việt
-
-### Wav2Letter++ (Facebook)
-
-Mô hình CNN tốc độ nhanh:
-
-- **Type**: CNN
-- **Ưu điểm**: Tốc độ nhanh, kiến trúc đơn giản
-- **Vietnamese support**: ⚠️ Cần model tiếng Việt
-- **Lưu ý**: Cần build từ source hoặc Docker
-
-### Kaldi (HMM-GMM)
-
-Mô hình truyền thống:
-
-- **Type**: HMM-GMM
-- **Ưu điểm**: Hiểu nền tảng ASR
-- **Vietnamese support**: ⚠️ Cần acoustic và language model
-- **Lưu ý**: Cần cài đặt Kaldi toolkit thủ công
 
 **Khuyến nghị chung**: Sử dụng **PhoWhisper-medium** cho audio tiếng Việt để đạt độ chính xác tốt nhất.
 

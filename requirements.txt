@@ -19,21 +19,17 @@ transformers>=4.30.0
 accelerate>=0.20.0
 jiwer>=3.0.0
 tf-keras>=2.15.0  # Cần cho PhoWhisper với Keras 3 compatibility
-# Wav2Vec 2.0 (đã có transformers)
-# datasets>=2.0.0  # Không cần thiết - wav2vec2 chỉ cần transformers/torch. Comment để tránh lỗi với Python 3.13
+
+# Dependencies cho Whisper và PhoWhisper:
+# - openai-whisper: Whisper model
+# - transformers: PhoWhisper model
+# - torch, torchaudio: PyTorch backend
+# - tf-keras: Keras compatibility cho PhoWhisper
+# - imageio-ffmpeg: FFmpeg cho Whisper
+
 # API/Streaming
 fastapi>=0.110.0
 uvicorn>=0.23.0
 audio-recorder-streamlit>=0.0.8
 altair>=5.0.0
-# Optional diarization/ASR backends (cài khi cần)
-# pyannote.audio
-# vosk
-# deepspeech
-# nemo-toolkit[asr]
-# DeepSpeech 2 (optional)
-# deepspeech>=0.10.0  # Uncomment nếu muốn sử dụng DeepSpeech
-# NeMo/QuartzNet (optional)
-# nemo-toolkit[asr]>=1.15.0  # Uncomment nếu muốn sử dụng QuartzNet
-# Wav2Letter++ và Kaldi cần cài đặt thủ công
 

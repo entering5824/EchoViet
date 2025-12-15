@@ -1,6 +1,6 @@
 """
 Transcription Page
-Hỗ trợ tất cả ASR models
+Hỗ trợ Whisper và PhoWhisper
 """
 import streamlit as st
 import os
@@ -22,21 +22,6 @@ from core.asr.transcription_service import (
 )
 from core.asr.phowhisper_service import (
     load_phowhisper_model, transcribe_phowhisper
-)
-from core.asr.wav2vec2_service import (
-    load_wav2vec2_model, transcribe_wav2vec2
-)
-from core.asr.deepspeech2_service import (
-    load_deepspeech2_model, transcribe_deepspeech2, check_deepspeech_available
-)
-from core.asr.quartznet_service import (
-    load_quartznet_model, transcribe_quartznet, check_nemo_available
-)
-from core.asr.wav2letter_service import (
-    load_wav2letter_model, transcribe_wav2letter, check_wav2letter_available
-)
-from core.asr.kaldi_service import (
-    load_kaldi_model, transcribe_kaldi, check_kaldi_available
 )
 from core.audio.audio_processor import chunk_signal, format_timestamp
 from app.components.sidebar import render_sidebar
@@ -161,14 +146,6 @@ else:
     )
     auto_punct = st.checkbox("Tự động chèn dấu câu (đơn giản)", value=False)
     
-    # Special handling for models that need additional config
-    deepspeech_model_path = None
-    if selected_model_id == "deepspeech2" and check_deepspeech_available():
-        st.info("💡 DeepSpeech cần model file (.pbmm). Tải từ: https://github.com/mozilla/DeepSpeech/releases")
-        deepspeech_model_path = st.text_input("DeepSpeech model path (.pbmm):", key="deepspeech_model_path", value="")
-        if deepspeech_model_path and not os.path.exists(deepspeech_model_path):
-            st.error(f"❌ Không tìm thấy file: {deepspeech_model_path}")
-    
     if st.button("🚀 Bắt đầu Transcription", type="primary"):
         if st.session_state.audio_data is not None:
             if not is_available:
@@ -232,52 +209,15 @@ else:
                             model_obj, device = load_whisper_model(model_size)
                             if model_obj:
                                 result = transcribe_chunked_with_whisper(model_obj, language="vi")
+                            else:
+                                st.error("❌ Không thể load Whisper model!")
                         
                         elif selected_model_id == "phowhisper":
                             model_obj = load_phowhisper_model(model_size)
                             if model_obj:
                                 result = transcribe_chunked_with_phowhisper(model_obj)
-                        
-                        elif selected_model_id == "wav2vec2":
-                            processor, model_obj = load_wav2vec2_model()
-                            if processor and model_obj:
-                                result = transcribe_wav2vec2(
-                                    processor, model_obj, st.session_state.audio_data, sr=st.session_state.audio_sr
-                                )
-                        
-                        elif selected_model_id == "deepspeech2":
-                            if check_deepspeech_available():
-                                if deepspeech_model_path and os.path.exists(deepspeech_model_path):
-                                    model_obj = load_deepspeech2_model(deepspeech_model_path)
-                                    if model_obj:
-                                        result = transcribe_deepspeech2(
-                                            model_obj, st.session_state.audio_data, sr=st.session_state.audio_sr
-                                        )
-                                    else:
-                                        st.error("❌ Không thể load DeepSpeech model!")
-                                else:
-                                    st.error("❌ Vui lòng cung cấp đường dẫn đến DeepSpeech model file (.pbmm)")
                             else:
-                                st.error("❌ DeepSpeech chưa được cài đặt. Cài: pip install deepspeech")
-                        
-                        elif selected_model_id == "quartznet":
-                            if check_nemo_available():
-                                model_obj = load_quartznet_model()
-                                if model_obj:
-                                    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
-                                        sf.write(tmp_file.name, st.session_state.audio_data, st.session_state.audio_sr)
-                                        result = transcribe_quartznet(
-                                            model_obj, tmp_file.name, sr=st.session_state.audio_sr
-                                        )
-                                        os.unlink(tmp_file.name)
-                            else:
-                                st.error("❌ NeMo toolkit chưa được cài đặt.")
-                        
-                        elif selected_model_id == "wav2letter":
-                            st.warning("⚠️ Wav2Letter++ chưa được tích hợp đầy đủ.")
-                        
-                        elif selected_model_id == "kaldi":
-                            st.warning("⚠️ Kaldi chưa được tích hợp đầy đủ.")
+                                st.error("❌ Không thể load PhoWhisper model!")
                         
                         if result:
                             st.session_state.transcript_result = result

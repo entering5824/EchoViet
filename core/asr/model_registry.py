@@ -1,6 +1,6 @@
 """
 Model Registry
-Quản lý tất cả ASR models và metadata
+Quản lý ASR models: Whisper và PhoWhisper
 """
 from typing import Dict, List, Optional
 
@@ -28,66 +28,6 @@ MODELS: Dict[str, Dict] = {
         "recommended": True,
         "vietnamese_support": True,
         "dependencies": ["transformers", "torch"]
-    },
-    "wav2vec2": {
-        "name": "Wav2Vec 2.0",
-        "type": "Transformer-based self-supervised",
-        "category": "Transformer-based self-supervised",
-        "service": "wav2vec2_service",
-        "sizes": ["base", "large"],
-        "default_size": "base",
-        "description": "Mô hình self-supervised learning, hiện đại và accuracy cao",
-        "recommended": False,
-        "vietnamese_support": False,  # Cần fine-tuned model
-        "dependencies": ["transformers", "torch"]  # Không cần datasets
-    },
-    "deepspeech2": {
-        "name": "DeepSpeech 2",
-        "type": "CTC",
-        "category": "End-to-end CTC cơ bản",
-        "service": "deepspeech2_service",
-        "sizes": ["default"],
-        "default_size": "default",
-        "description": "Mô hình CTC cơ bản, dễ hiểu về CTC và decoding",
-        "recommended": False,
-        "vietnamese_support": False,  # Cần model tiếng Việt
-        "dependencies": ["deepspeech"]  # hoặc mozilla-deepspeech
-    },
-    "quartznet": {
-        "name": "QuartzNet",
-        "type": "CNN",
-        "category": "Conv-based",
-        "service": "quartznet_service",
-        "sizes": ["15x5", "5x5"],
-        "default_size": "15x5",
-        "description": "Mô hình CNN mạnh và nhẹ nhất trong các CNN-based models",
-        "recommended": False,
-        "vietnamese_support": False,  # Cần model tiếng Việt
-        "dependencies": ["nemo-toolkit[asr]"]
-    },
-    "wav2letter": {
-        "name": "Wav2Letter++",
-        "type": "CNN",
-        "category": "Conv-based",
-        "service": "wav2letter_service",
-        "sizes": ["default"],
-        "default_size": "default",
-        "description": "Mô hình CNN, tốc độ nhanh, kiến trúc đơn giản",
-        "recommended": False,
-        "vietnamese_support": False,  # Cần model tiếng Việt
-        "dependencies": []  # Cần build từ source hoặc Docker
-    },
-    "kaldi": {
-        "name": "Kaldi",
-        "type": "HMM-GMM",
-        "category": "Truyền thống",
-        "service": "kaldi_service",
-        "sizes": ["default"],
-        "default_size": "default",
-        "description": "HMM-GMM truyền thống, hiểu nền tảng ASR",
-        "recommended": False,
-        "vietnamese_support": False,  # Cần acoustic và language model
-        "dependencies": []  # Cần cài đặt thủ công Kaldi toolkit
     }
 }
 
@@ -139,13 +79,7 @@ def check_model_dependencies(model_id: str):
                 import transformers
             elif dep == "torch":
                 import torch
-            elif dep == "deepspeech":
-                import deepspeech
-            elif dep == "nemo-toolkit[asr]":
-                import nemo
-            # datasets đã được loại bỏ khỏi dependencies vì không cần thiết
-            # và có thể gây lỗi với Python 3.13
-            # Add more dependency checks as needed
+            # Chỉ hỗ trợ Whisper và PhoWhisper
         except (ImportError, SyntaxError, IndentationError, AttributeError, Exception) as e:
             # Bắt tất cả exception để tránh crash khi check dependencies
             missing.append(dep)

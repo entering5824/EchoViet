@@ -52,7 +52,7 @@ st.markdown("""
     <li>Cho phép tải lên audio cuộc họp (WAV/MP3/FLAC).</li>
     <li>Hiển thị waveform và spectrogram.</li>
     <li>Tạo transcript tự động và cho phép chỉnh sửa.</li>
-    <li>Hỗ trợ nhiều mô hình ASR (Whisper, PhoWhisper, Wav2Vec2, DeepSpeech2, QuartzNet, Wav2Letter++, Kaldi).</li>
+    <li>Hỗ trợ 2 mô hình ASR chính: Whisper và PhoWhisper (tối ưu cho tiếng Việt).</li>
     <li>Xử lý audio dài với chunking và speaker diarization.</li>
     <li>Export transcript ra nhiều định dạng (TXT, DOCX, PDF).</li>
 </ul>
@@ -68,7 +68,7 @@ st.markdown("""
 <div class="card">
 <ul style="font-size: 16px; line-height: 1.8;">
     <li><strong>Tiền xử lý audio:</strong> Normalize, noise reduction, format conversion.</li>
-    <li><strong>Nhận dạng tiếng nói:</strong> Sử dụng các mô hình ASR mã nguồn mở (Whisper, PhoWhisper, v.v.).</li>
+    <li><strong>Nhận dạng tiếng nói:</strong> Sử dụng Whisper và PhoWhisper (tối ưu cho tiếng Việt).</li>
     <li><strong>Xử lý audio dài:</strong> Chunking và xử lý từng đoạn.</li>
     <li><strong>Speaker Diarization:</strong> Phân biệt người nói trong cuộc họp.</li>
     <li><strong>Triển khai web app:</strong> Sử dụng Streamlit framework.</li>

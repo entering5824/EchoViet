@@ -125,15 +125,10 @@ st.markdown("### 3. Kiến trúc mô hình")
 
 st.markdown("""
 <div class="card">
-<h4 style="color: #1f4e79; margin-top: 0;">Hệ thống hỗ trợ nhiều mô hình ASR:</h4>
+<h4 style="color: #1f4e79; margin-top: 0;">Hệ thống hỗ trợ 2 mô hình ASR chính:</h4>
 <ul style="font-size: 16px; line-height: 1.8;">
     <li><strong>Whisper</strong> (OpenAI): Transformer Encoder–Decoder, huấn luyện đa ngôn ngữ</li>
     <li><strong>PhoWhisper</strong> (VinAI Research): Whisper fine-tune đặc biệt cho tiếng Việt 🌟</li>
-    <li><strong>Wav2Vec 2.0</strong>: Transformer-based self-supervised learning</li>
-    <li><strong>DeepSpeech 2</strong>: CTC (Connectionist Temporal Classification)</li>
-    <li><strong>QuartzNet</strong> (NVIDIA NeMo): CNN-based architecture</li>
-    <li><strong>Wav2Letter++</strong>: CNN architecture, tốc độ nhanh</li>
-    <li><strong>Kaldi</strong>: HMM-GMM truyền thống</li>
 </ul>
 </div>
 """, unsafe_allow_html=True)

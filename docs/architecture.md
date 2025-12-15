@@ -63,31 +63,9 @@ Hệ thống Vietnamese Speech to Text được xây dựng với kiến trúc m
   - Transcribe audio với PhoWhisper
   - Format kết quả tương thích với Whisper
 
-- **`wav2vec2_service.py`**:
-  - Load Wav2Vec 2.0 models từ HuggingFace
-  - Self-supervised learning model
-  - CTC decoding
-
-- **`deepspeech2_service.py`**:
-  - Load DeepSpeech 2 models
-  - CTC-based transcription
-  - Yêu cầu model file (.pbmm)
-
-- **`quartznet_service.py`**:
-  - Load QuartzNet models từ NeMo
-  - CNN-based architecture
-  - Sử dụng NVIDIA NeMo framework
-
-- **`wav2letter_service.py`**:
-  - Placeholder cho Wav2Letter++
-  - Cần build từ source hoặc Docker
-
-- **`kaldi_service.py`**:
-  - Placeholder cho Kaldi toolkit
-  - Cần cài đặt Kaldi thủ công
-
 - **`evaluate_models.py`**:
   - Script đánh giá chất lượng mô hình
+  - So sánh Whisper vs PhoWhisper
   - Tính WER và CER
   - Tạo báo cáo so sánh
 
@@ -169,16 +147,14 @@ Streamlit pages share session state, cho phép:
 ### Core Dependencies
 - `streamlit`: Web framework
 - `torch`, `torchaudio`: PyTorch for models
-- `transformers`: HuggingFace library (PhoWhisper, Wav2Vec 2.0)
+- `transformers`: HuggingFace library (PhoWhisper)
 - `librosa`: Audio processing
 - `soundfile`: Audio I/O
-- `pydub`: Audio format conversion
 
-### Model-Specific Dependencies (Optional)
+### Model-Specific Dependencies
 - `openai-whisper`: Whisper models
-- `datasets`: For Wav2Vec 2.0
-- `deepspeech`: DeepSpeech 2 (optional)
-- `nemo-toolkit[asr]`: QuartzNet/NeMo (optional)
+- `tf-keras`: Keras compatibility cho PhoWhisper (Keras 3)
+- `imageio-ffmpeg`: FFmpeg cho Whisper
 
 ### Export Dependencies
 - `python-docx`: DOCX export
@@ -188,7 +164,7 @@ Streamlit pages share session state, cho phép:
 - `jiwer`: WER/CER calculation
 - `pandas`: Data processing
 
-**Lưu ý:** Một số models (Kaldi, Wav2Letter++) cần cài đặt thủ công hoặc Docker.
+**Lưu ý:** Hệ thống chỉ hỗ trợ Whisper và PhoWhisper. Tất cả dependencies đã được liệt kê ở trên.
 
 ## Extension Points
 

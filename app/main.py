@@ -90,20 +90,8 @@ def main():
     # Apply custom CSS
     apply_custom_css()
 
-    # Render sidebar with logo and navigation
-    selection_fallback = None
+    # Render sidebar with logo and navigation (radio stored in session_state)
     render_sidebar()
-    # Lấy lựa chọn fallback (nếu page_link không khả dụng)
-    selection_fallback = st.session_state.get("nav_choice")
-    selection = st.sidebar.radio(
-        "Điều hướng (nội bộ)",
-        (
-            "🏠 Home",
-            "📊 Analysis",
-            "📚 Training Info",
-        ),
-        index=0,
-    )
 
     # Initialize session state
     for key, default in (
@@ -116,11 +104,9 @@ def main():
         if key not in st.session_state:
             st.session_state[key] = default
 
-    # Routing
-    # Ưu tiên fallback lựa chọn nếu có
-    choice = selection_fallback or selection
+    # Routing dựa trên lựa chọn trong sidebar
+    choice = st.session_state.get("nav_selection", "🏠 Home")
 
-    # Mapping tới file path cho fallback
     fallback_map = {
         "🏠 Home": None,
         "📤 Upload & Record": os.path.join(BASE_DIR, "pages", "1_📤_Upload_Record.py"),

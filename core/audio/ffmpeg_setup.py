@@ -5,6 +5,7 @@ Sử dụng imageio-ffmpeg: portable FFmpeg binary không cần system installat
 """
 import os
 import sys
+import shutil
 
 def setup_ffmpeg(silent=False):
     """
@@ -31,6 +32,16 @@ def setup_ffmpeg(silent=False):
         current_path = os.environ.get("PATH", "")
         if ffmpeg_dir not in current_path:
             os.environ["PATH"] = current_path + os.pathsep + ffmpeg_dir
+        
+        # Tạo alias ffprobe nếu chưa có (imageio-ffmpeg không có ffprobe)
+        # ffmpeg binary có thể dùng làm ffprobe alias
+        ffprobe_path = os.path.join(ffmpeg_dir, "ffprobe")
+        if not os.path.exists(ffprobe_path):
+            try:
+                shutil.copy(ffmpeg_path, ffprobe_path)
+            except Exception:
+                # Nếu không copy được, có thể đã tồn tại hoặc không có quyền
+                pass
         
         # Kiểm tra xem ffmpeg có hoạt động không
         import subprocess

@@ -1,51 +1,61 @@
 """
 Module xử lý audio: upload, preprocessing, visualization
+Pipeline không cần ffprobe - sử dụng librosa/soundfile thay vì pydub
 """
+import os
 import librosa
 import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from pydub import AudioSegment
 import io
 import streamlit as st
 import tempfile
 from typing import Tuple, List
 
-# Đảm bảo FFmpeg đã được setup (cho PyDub)
-try:
-    from .ffmpeg_setup import ensure_ffmpeg
-    ensure_ffmpeg()
-except ImportError:
-    # Nếu không có ffmpeg_setup, bỏ qua (có thể đã có FFmpeg trong system)
-    pass
-
 def load_audio(file, sr=16000):
-    """Load audio file và convert về format chuẩn"""
+    """
+    Load audio file và convert về format chuẩn
+    Sử dụng librosa/soundfile thay vì pydub để tránh phụ thuộc ffprobe
+    """
     try:
-        # Đọc audio file
+        # Đọc audio file vào temporary file để librosa có thể xử lý
         if isinstance(file, bytes):
             audio_bytes = file
+            file_extension = 'wav'  # Default
         else:
             audio_bytes = file.read()
+            file_extension = file.name.split('.')[-1].lower() if hasattr(file, 'name') else 'wav'
         
-        # Xử lý theo định dạng
-        file_extension = file.name.split('.')[-1].lower() if hasattr(file, 'name') else 'wav'
+        # Tạo temporary file để librosa load
+        # Librosa có thể load mp3, flac, ogg, m4a mà không cần pydub
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f'.{file_extension}') as tmp_file:
+            tmp_file.write(audio_bytes)
+            tmp_path = tmp_file.name
         
-        if file_extension in ['mp3', 'm4a', 'flac', 'ogg']:
-            # Sử dụng pydub để convert
-            audio_segment = AudioSegment.from_file(io.BytesIO(audio_bytes), format=file_extension)
-            # Convert to WAV
-            wav_io = io.BytesIO()
-            audio_segment.export(wav_io, format="wav")
-            wav_io.seek(0)
-            y, sr_original = sf.read(wav_io)
-        else:
-            y, sr_original = sf.read(io.BytesIO(audio_bytes))
-        
-        # Resample nếu cần
-        if sr_original != sr:
-            y = librosa.resample(y, orig_sr=sr_original, target_sr=sr)
+        try:
+            # Sử dụng librosa để load - hỗ trợ nhiều format và tự động convert về mono
+            y, sr_original = librosa.load(tmp_path, sr=sr, mono=True)
+        except Exception as librosa_error:
+            # Nếu librosa không load được, thử soundfile
+            try:
+                y, sr_original = sf.read(tmp_path)
+                # Convert to mono nếu stereo
+                if len(y.shape) > 1:
+                    y = np.mean(y, axis=1)
+                # Resample nếu cần
+                if sr_original != sr:
+                    y = librosa.resample(y, orig_sr=sr_original, target_sr=sr)
+            except Exception as sf_error:
+                st.error(f"Lỗi khi load audio với librosa: {str(librosa_error)}")
+                st.error(f"Lỗi khi load audio với soundfile: {str(sf_error)}")
+                return None, None
+        finally:
+            # Xóa temporary file
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
         
         return y, sr
     except Exception as e:

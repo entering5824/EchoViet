@@ -6,38 +6,13 @@ Home Page
 import streamlit as st
 import os
 import sys
-import shutil
-
-# Setup FFmpeg và ffprobe alias NGAY ĐẦU FILE (trước mọi import audio)
-try:
-    import imageio_ffmpeg
-    
-    ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
-    ffmpeg_dir = os.path.dirname(ffmpeg_path)
-    
-    # Add PATH
-    os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
-    
-    # Tạo alias ffprobe nếu chưa có (imageio-ffmpeg không có ffprobe)
-    # ffmpeg binary có thể dùng làm ffprobe alias
-    ffprobe_path = os.path.join(ffmpeg_dir, "ffprobe")
-    if not os.path.exists(ffprobe_path):
-        # Copy ffmpeg để tạo ffprobe alias
-        try:
-            shutil.copy(ffmpeg_path, ffprobe_path)
-        except Exception:
-            # Nếu không copy được, có thể đã tồn tại hoặc không có quyền
-            pass
-except ImportError:
-    # Nếu không có imageio-ffmpeg, bỏ qua (có thể đã có system ffmpeg)
-    pass
 
 # Add parent directory to path for imports
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(BASE_DIR, '..')))
 
 # Setup FFmpeg từ imageio-ffmpeg TRƯỚC KHI import các module khác
-# Điều này đảm bảo pydub, moviepy, whisper sử dụng đúng ffmpeg path
+# Chỉ cần ffmpeg cho whisper, không cần ffprobe
 from core.audio.ffmpeg_setup import ensure_ffmpeg
 ensure_ffmpeg(silent=True)
 

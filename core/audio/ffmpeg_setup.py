@@ -2,10 +2,10 @@
 Module setup FFmpeg sử dụng imageio-ffmpeg
 Tự động tải và cấu hình portable FFmpeg cho Streamlit Cloud
 Sử dụng imageio-ffmpeg: portable FFmpeg binary không cần system installation
+Chỉ cần ffmpeg cho whisper, không cần ffprobe (pipeline không dùng pydub)
 """
 import os
 import sys
-import shutil
 
 def setup_ffmpeg(silent=False):
     """
@@ -23,7 +23,7 @@ def setup_ffmpeg(silent=False):
         # Lấy đường dẫn ffmpeg executable từ imageio-ffmpeg
         ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
         
-        # Set environment variables để pydub, moviepy, whisper sử dụng
+        # Set environment variables để whisper sử dụng (không cần cho pydub nữa)
         os.environ["FFMPEG_BINARY"] = ffmpeg_path
         os.environ["IMAGEIO_FFMPEG_EXE"] = ffmpeg_path
         
@@ -32,16 +32,6 @@ def setup_ffmpeg(silent=False):
         current_path = os.environ.get("PATH", "")
         if ffmpeg_dir not in current_path:
             os.environ["PATH"] = current_path + os.pathsep + ffmpeg_dir
-        
-        # Tạo alias ffprobe nếu chưa có (imageio-ffmpeg không có ffprobe)
-        # ffmpeg binary có thể dùng làm ffprobe alias
-        ffprobe_path = os.path.join(ffmpeg_dir, "ffprobe")
-        if not os.path.exists(ffprobe_path):
-            try:
-                shutil.copy(ffmpeg_path, ffprobe_path)
-            except Exception:
-                # Nếu không copy được, có thể đã tồn tại hoặc không có quyền
-                pass
         
         # Kiểm tra xem ffmpeg có hoạt động không
         import subprocess

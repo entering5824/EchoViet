@@ -45,6 +45,17 @@ from app.components.layout import apply_custom_css
 # Apply custom CSS
 apply_custom_css()
 
+# Ensure session_state keys exist when page is opened directly
+for key, default in (
+    ("audio_data", None),
+    ("audio_sr", None),
+    ("audio_info", None),
+    ("transcript_result", None),
+    ("transcript_text", ""),
+):
+    if key not in st.session_state:
+        st.session_state[key] = default
+
 # Render sidebar with logo
 render_sidebar()
 

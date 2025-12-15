@@ -28,16 +28,17 @@ Hệ thống chuyển đổi giọng nói tiếng Việt thành văn bản tự 
 
 ### Yêu cầu:
 - Python 3.8+
-- FFmpeg (tự động tải qua static-ffmpeg)
+- FFmpeg (tự động tải qua imageio-ffmpeg)
 
 ### FFmpeg Setup:
 
 **Tự động (Khuyến nghị):**
-Hệ thống tự động tải và sử dụng static FFmpeg từ GitHub thông qua thư viện `static-ffmpeg`. 
+Hệ thống tự động tải và sử dụng portable FFmpeg thông qua thư viện `imageio-ffmpeg`. 
 Không cần cài đặt thủ công - hoạt động trên Streamlit Cloud và môi trường local.
+FFmpeg được tự động cấu hình cho `pydub`, `moviepy`, và `whisper`.
 
 **Cài đặt thủ công (Tùy chọn):**
-Nếu muốn sử dụng system FFmpeg thay vì static version:
+Nếu muốn sử dụng system FFmpeg thay vì portable version:
 
 **Windows:**
 ```bash
@@ -282,8 +283,9 @@ pip install openai-whisper
 ```
 
 ### Lỗi FFmpeg:
-Hệ thống tự động tải static FFmpeg. Nếu gặp lỗi:
+Hệ thống tự động tải portable FFmpeg qua `imageio-ffmpeg`. Nếu gặp lỗi:
 - Kiểm tra kết nối internet (lần đầu cần tải FFmpeg)
+- Đảm bảo `imageio-ffmpeg` đã được cài đặt: `pip install imageio-ffmpeg`
 - Hoặc cài đặt FFmpeg thủ công và đảm bảo có trong PATH
 
 ### Lỗi "CUDA out of memory":

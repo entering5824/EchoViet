@@ -39,7 +39,7 @@ if st.session_state.transcript_result and st.session_state.audio_info and st.ses
         st.metric("Độ dài", f"{stats.get('duration', 0):.2f} giây")
     with col4:
         st.metric("Từ/phút", f"{stats.get('words_per_minute', 0):.1f}")
-
+    
     # Keywords (đơn giản)
     st.subheader("🔑 Keywords (tần suất cao)")
     words = [w.lower().strip(",.;:") for w in st.session_state.transcript_text.split()]
@@ -63,30 +63,30 @@ if st.session_state.transcript_result and st.session_state.audio_info and st.ses
         'word_count': stats.get('word_count', 0),
         'character_count': stats.get('character_count', 0)
     }
-
-    try:
+    
+            try:
         txt_bytes, txt_name = export_txt(
-            st.session_state.transcript_text,
-            f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        )
+                        st.session_state.transcript_text,
+                        f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                    )
         st.download_button("⬇️ Tải TXT", data=txt_bytes, file_name=txt_name, mime="text/plain")
-
+                
         docx_bytes, docx_name = export_docx(
-            st.session_state.transcript_text,
-            metadata,
-            f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
-        )
+                        st.session_state.transcript_text,
+                        metadata,
+                        f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+                    )
         st.download_button("⬇️ Tải DOCX", data=docx_bytes, file_name=docx_name,
                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-
+                
         pdf_bytes, pdf_name = export_pdf(
-            st.session_state.transcript_text,
-            metadata,
-            f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-        )
+                        st.session_state.transcript_text,
+                        metadata,
+                        f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                    )
         st.download_button("⬇️ Tải PDF", data=pdf_bytes, file_name=pdf_name, mime="application/pdf")
-        st.success("✅ File đã sẵn sàng để tải xuống!")
-    except Exception as e:
+                st.success("✅ File đã sẵn sàng để tải xuống!")
+            except Exception as e:
         st.error(f\"❌ Lỗi khi export: {str(e)}\")
 else:
     st.info("ℹ️ Vui lòng transcribe audio trước để xem thống kê và export.")

@@ -41,7 +41,8 @@ Hệ thống Vietnamese Speech to Text được xây dựng với kiến trúc m
   - Audio info extraction
 
 - **`ffmpeg_setup.py`**:
-  - Tự động setup static FFmpeg từ GitHub
+  - Tự động setup portable FFmpeg từ `imageio-ffmpeg`
+  - Cấu hình environment variables cho `pydub`, `moviepy`, và `whisper`
   - Hỗ trợ Streamlit Cloud và local environment
 
 #### 2.2 ASR Services (`core/asr/`)

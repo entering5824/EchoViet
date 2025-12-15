@@ -11,7 +11,8 @@ import sys
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(BASE_DIR, '..')))
 
-# Setup static FFmpeg trước khi import các module khác
+# Setup FFmpeg từ imageio-ffmpeg TRƯỚC KHI import các module khác
+# Điều này đảm bảo pydub, moviepy, whisper sử dụng đúng ffmpeg path
 from core.audio.ffmpeg_setup import ensure_ffmpeg
 ensure_ffmpeg(silent=True)
 

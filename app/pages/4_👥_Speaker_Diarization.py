@@ -46,20 +46,20 @@ else:
             ranges = chunk_signal(st.session_state.audio_data, st.session_state.audio_sr, int(chunk_len))
             base_segments = [{"start": s0 / st.session_state.audio_sr, "end": s1 / st.session_state.audio_sr, "text": ""} for s0, s1 in ranges]
 
-        with st.spinner("Đang phân tích speaker..."):
-            speaker_segments = simple_speaker_segmentation(
-                st.session_state.audio_data,
-                st.session_state.audio_sr,
+            with st.spinner("Đang phân tích speaker..."):
+                speaker_segments = simple_speaker_segmentation(
+                    st.session_state.audio_data,
+                    st.session_state.audio_sr,
                 base_segments
-            )
-            
-            if speaker_segments:
+                )
+                
+                if speaker_segments:
                 st.session_state.speaker_segments = speaker_segments
-                st.session_state.transcript_text = format_with_speakers(speaker_segments)
-                st.success("✅ Đã phân tích speaker thành công!")
-                st.rerun()
-            else:
-                st.warning("⚠️ Không thể phân tích speaker. Có thể do audio không có segments chi tiết.")
+                    st.session_state.transcript_text = format_with_speakers(speaker_segments)
+                    st.success("✅ Đã phân tích speaker thành công!")
+                    st.rerun()
+                else:
+                    st.warning("⚠️ Không thể phân tích speaker. Có thể do audio không có segments chi tiết.")
     
     # Hiển thị diarized transcript
     if st.session_state.transcript_text and any("Speaker" in line for line in st.session_state.transcript_text.split('\n')):

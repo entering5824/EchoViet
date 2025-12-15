@@ -289,7 +289,7 @@ else:
                             else:
                                 st.session_state.transcript_text = text_out or format_transcript(
                                     result, with_timestamps=False
-                                )
+                            )
                             st.success("✅ Transcription hoàn tất!")
                             st.rerun()
                         elif model_obj is None:

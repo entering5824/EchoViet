@@ -5,6 +5,11 @@ Chạy: uvicorn core.api.server:app --host 0.0.0.0 --port 8000
 """
 import tempfile
 import os
+
+# Setup FFmpeg từ imageio-ffmpeg TRƯỚC KHI import các module khác
+from core.audio.ffmpeg_setup import ensure_ffmpeg
+ensure_ffmpeg(silent=True)
+
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware

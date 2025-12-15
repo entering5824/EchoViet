@@ -1,14 +1,14 @@
 """
-Module setup static FFmpeg từ GitHub
-Tự động tải và cấu hình static FFmpeg cho Streamlit Cloud
-Sử dụng static-ffmpeg từ GitHub: https://github.com/joshbernard/static-ffmpeg
+Module setup FFmpeg sử dụng imageio-ffmpeg
+Tự động tải và cấu hình portable FFmpeg cho Streamlit Cloud
+Sử dụng imageio-ffmpeg: portable FFmpeg binary không cần system installation
 """
 import os
 import sys
 
 def setup_ffmpeg(silent=False):
     """
-    Setup static FFmpeg từ GitHub
+    Setup FFmpeg từ imageio-ffmpeg
     
     Args:
         silent: Nếu True, không hiển thị thông báo (dùng khi chưa có Streamlit context)
@@ -17,15 +17,26 @@ def setup_ffmpeg(silent=False):
         bool: True nếu setup thành công
     """
     try:
-        import static_ffmpeg
-        # Thêm FFmpeg vào PATH
-        static_ffmpeg.add_paths()
+        import imageio_ffmpeg
+        
+        # Lấy đường dẫn ffmpeg executable từ imageio-ffmpeg
+        ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+        
+        # Set environment variables để pydub, moviepy, whisper sử dụng
+        os.environ["FFMPEG_BINARY"] = ffmpeg_path
+        os.environ["IMAGEIO_FFMPEG_EXE"] = ffmpeg_path
+        
+        # Thêm vào PATH để các tool khác có thể tìm thấy
+        ffmpeg_dir = os.path.dirname(ffmpeg_path)
+        current_path = os.environ.get("PATH", "")
+        if ffmpeg_dir not in current_path:
+            os.environ["PATH"] = current_path + os.pathsep + ffmpeg_dir
         
         # Kiểm tra xem ffmpeg có hoạt động không
         import subprocess
         try:
             result = subprocess.run(
-                ['ffmpeg', '-version'],
+                [ffmpeg_path, '-version'],
                 capture_output=True,
                 text=True,
                 timeout=5
@@ -35,9 +46,9 @@ def setup_ffmpeg(silent=False):
                 if not silent:
                     try:
                         import streamlit as st
-                        st.success("✅ Static FFmpeg đã được tải và cấu hình thành công!")
+                        st.success("✅ FFmpeg đã được cấu hình thành công từ imageio-ffmpeg!")
                     except:
-                        print("✅ Static FFmpeg đã được tải và cấu hình thành công!")
+                        print("✅ FFmpeg đã được cấu hình thành công từ imageio-ffmpeg!")
                 return True
             else:
                 if not silent:
@@ -50,20 +61,18 @@ def setup_ffmpeg(silent=False):
         except subprocess.TimeoutExpired:
             # FFmpeg có thể đang chạy, coi như thành công
             return True
-        except FileNotFoundError:
-            # FFmpeg chưa được tải, thử lại
+        except Exception as e:
+            # Vẫn coi như thành công nếu đã set env vars
             if not silent:
                 try:
                     import streamlit as st
-                    st.info("ℹ️ Đang tải static FFmpeg từ GitHub...")
+                    st.warning(f"⚠️ Không thể kiểm tra FFmpeg: {str(e)}")
                 except:
-                    print("ℹ️ Đang tải static FFmpeg từ GitHub...")
-            # Thử tải lại
-            static_ffmpeg.add_paths()
+                    print(f"⚠️ Không thể kiểm tra FFmpeg: {str(e)}")
             return True
             
     except ImportError:
-        error_msg = "❌ Không tìm thấy static-ffmpeg. Vui lòng cài đặt: pip install static-ffmpeg"
+        error_msg = "❌ Không tìm thấy imageio-ffmpeg. Vui lòng cài đặt: pip install imageio-ffmpeg"
         if not silent:
             try:
                 import streamlit as st
@@ -72,7 +81,7 @@ def setup_ffmpeg(silent=False):
                 print(error_msg)
         return False
     except Exception as e:
-        error_msg = f"⚠️ Không thể setup static FFmpeg: {str(e)}"
+        error_msg = f"⚠️ Không thể setup FFmpeg: {str(e)}"
         if not silent:
             try:
                 import streamlit as st
@@ -96,4 +105,3 @@ def ensure_ffmpeg(silent=True):
     if not _ffmpeg_setup_done:
         setup_ffmpeg(silent=silent)
         _ffmpeg_setup_done = True
-

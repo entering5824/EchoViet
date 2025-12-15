@@ -280,7 +280,6 @@ else:
                                 if text_out and text_out[-1] not in ".!?":
                                     text_out += "."
                                 # Fix spacing around punctuation
-                                import re
                                 text_out = re.sub(r'\s+([,.!?;:])', r'\1', text_out)
                                 text_out = re.sub(r'([,.!?;:])\s*([,.!?;:])', r'\1\2', text_out)
                             if with_timestamps:

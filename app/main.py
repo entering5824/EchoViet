@@ -22,33 +22,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Import components
 from app.components.sidebar import render_sidebar
 from app.components.layout import apply_custom_css
+from app.components.footer import render_footer
 
-# Apply custom CSS
-apply_custom_css()
+# Import internal pages for manual navigation
+from app.pages import Home as HomePage
+from app.pages import Analysis as AnalysisPage
+from app.pages import Training_Info as TrainingInfoPage
 
-# Render sidebar with logo
-render_sidebar()
 
-# Initialize session state
-if 'audio_data' not in st.session_state:
-    st.session_state.audio_data = None
-if 'audio_sr' not in st.session_state:
-    st.session_state.audio_sr = None
-if 'transcript_result' not in st.session_state:
-    st.session_state.transcript_result = None
-if 'transcript_text' not in st.session_state:
-    st.session_state.transcript_text = ""
-if 'audio_info' not in st.session_state:
-    st.session_state.audio_info = None
+def render_home():
+    """Render the original home content."""
+    st.markdown(
+        '<div class="main-header">Designing and Developing a Vietnamese Speech to Text System for Automatic Meeting Transcription</div>',
+        unsafe_allow_html=True,
+    )
 
-# ========== HOME PAGE ==========
-st.markdown('<div class="main-header">Designing and Developing a Vietnamese Speech to Text System for Automatic Meeting Transcription</div>', 
-            unsafe_allow_html=True)
-
-st.markdown("""
+    st.markdown(
+        """
 ### 📋 Giới thiệu
 
 Hệ thống này cho phép bạn chuyển đổi giọng nói tiếng Việt thành văn bản một cách tự động và chính xác.
@@ -88,11 +80,49 @@ Sử dụng sidebar để điều hướng đến các chức năng:
 
 - **Whisper**: Mô hình đa ngôn ngữ, hỗ trợ nhiều ngôn ngữ
 - **PhoWhisper**: 🌟 Tối ưu đặc biệt cho tiếng Việt, độ chính xác cao hơn
-""")
+"""
+    )
 
-# Import footer component
-from app.components.footer import render_footer
 
-# ===== FOOTER =====
-render_footer()
+def main():
+    # Apply custom CSS
+    apply_custom_css()
+
+    # Render sidebar with logo and navigation
+    render_sidebar()
+    selection = st.sidebar.radio(
+        "Điều hướng",
+        (
+            "🏠 Home",
+            "📊 Analysis",
+            "📚 Training Info",
+        ),
+        index=0,
+    )
+
+    # Initialize session state
+    for key, default in (
+        ("audio_data", None),
+        ("audio_sr", None),
+        ("transcript_result", None),
+        ("transcript_text", ""),
+        ("audio_info", None),
+    ):
+        if key not in st.session_state:
+            st.session_state[key] = default
+
+    # Routing
+    if selection == "🏠 Home":
+        render_home()
+    elif selection == "📊 Analysis":
+        AnalysisPage.show()
+    elif selection == "📚 Training Info":
+        TrainingInfoPage.show()
+
+    # Footer
+    render_footer()
+
+
+if __name__ == "__main__":
+    main()
 

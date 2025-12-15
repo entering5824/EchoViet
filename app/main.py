@@ -8,7 +8,8 @@ import os
 import sys
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.abspath(os.path.join(BASE_DIR, '..')))
 
 # Setup static FFmpeg trước khi import các module khác
 from core.audio.ffmpeg_setup import ensure_ffmpeg
@@ -25,6 +26,7 @@ st.set_page_config(
 from app.components.sidebar import render_sidebar
 from app.components.layout import apply_custom_css
 from app.components.footer import render_footer
+import runpy
 
 # Import internal pages for manual navigation
 from app.pages import Home as HomePage
@@ -89,9 +91,12 @@ def main():
     apply_custom_css()
 
     # Render sidebar with logo and navigation
+    selection_fallback = None
     render_sidebar()
+    # Lấy lựa chọn fallback (nếu page_link không khả dụng)
+    selection_fallback = st.session_state.get("nav_choice")
     selection = st.sidebar.radio(
-        "Điều hướng",
+        "Điều hướng (nội bộ)",
         (
             "🏠 Home",
             "📊 Analysis",
@@ -112,12 +117,32 @@ def main():
             st.session_state[key] = default
 
     # Routing
-    if selection == "🏠 Home":
+    # Ưu tiên fallback lựa chọn nếu có
+    choice = selection_fallback or selection
+
+    # Mapping tới file path cho fallback
+    fallback_map = {
+        "🏠 Home": None,
+        "📤 Upload & Record": os.path.join(BASE_DIR, "pages", "1_📤_Upload_Record.py"),
+        "🎧 Preprocessing": os.path.join(BASE_DIR, "pages", "2_🎧_Preprocessing.py"),
+        "📝 Transcription": os.path.join(BASE_DIR, "pages", "3_📝_Transcription.py"),
+        "👥 Speaker Diarization": os.path.join(BASE_DIR, "pages", "4_👥_Speaker_Diarization.py"),
+        "📊 Export & Statistics": os.path.join(BASE_DIR, "pages", "5_📊_Export_Statistics.py"),
+        "🔬 ASR Benchmark": os.path.join(BASE_DIR, "pages", "6_🔬_ASR_Benchmark.py"),
+        "📊 Analysis (Single-file)": os.path.join(BASE_DIR, "pages", "Analysis.py"),
+        "📚 Training Info": None,  # handled below
+        "📡 Streaming": os.path.join(BASE_DIR, "pages", "Streaming.py"),
+        "🧩 API Docs": os.path.join(BASE_DIR, "pages", "API_Docs.py"),
+    }
+
+    if choice == "🏠 Home":
         render_home()
-    elif selection == "📊 Analysis":
+    elif choice == "📊 Analysis":
         AnalysisPage.show()
-    elif selection == "📚 Training Info":
+    elif choice == "📚 Training Info":
         TrainingInfoPage.show()
+    elif choice in fallback_map and fallback_map[choice]:
+        runpy.run_path(fallback_map[choice])
 
     # Footer
     render_footer()

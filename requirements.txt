@@ -21,7 +21,8 @@ protobuf>=3.20.0,<5.0.0
 transformers>=4.30.0
 accelerate>=0.20.0
 jiwer>=3.0.0
-tf-keras>=2.15.0  # Cần cho PhoWhisper với Keras 3 compatibility
+# tf-keras>=2.15.0  # Optional - PhoWhisper có thể hoạt động mà không cần
+# tensorflow>=2.15.0  # Optional - chỉ cần nếu muốn dùng tf-keras
 psutil>=5.9.0  # For memory monitoring
 
 # Dependencies cho Whisper và PhoWhisper:

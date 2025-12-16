@@ -169,27 +169,45 @@ def load_phowhisper_model(model_size="small"):
                 st.code("\n".join(error_details))
             return None
         
-        # 3. Kiểm tra và cài đặt tf-keras nếu cần
+        # 3. Kiểm tra tf-keras (optional - không bắt buộc)
         error_details.append("\n=== Keras Check ===")
+        tf_keras_available = False
         try:
             import tf_keras
-            error_details.append("tf-keras: OK")
+            error_details.append("tf-keras: OK (available)")
+            tf_keras_available = True
         except ImportError:
+            # tf-keras không bắt buộc - PhoWhisper có thể hoạt động mà không cần nó
+            # Chỉ cảnh báo, không fail
+            error_details.append("tf-keras: Not available (optional)")
             try:
+                # Thử cài đặt nhẹ nhàng (không bắt buộc)
                 import subprocess
                 import sys
-                st.warning("⚠️ Đang cài đặt tf-keras để tương thích với Keras 3...")
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "tf-keras>=2.15.0", "-q"])
-                import tf_keras
-                error_details.append("tf-keras: Installed successfully")
-            except Exception as install_error:
-                error_msg = f"Không thể cài đặt tf-keras: {str(install_error)}"
-                error_details.append(f"tf-keras: FAILED - {error_msg}")
-                st.error(f"❌ {error_msg}")
-                st.info("💡 Vui lòng cài đặt thủ công: pip install tf-keras")
-                with st.expander("🔍 Chi tiết lỗi"):
-                    st.code("\n".join(error_details))
-                return None
+                st.info("ℹ️ Đang thử cài đặt tf-keras để tương thích tốt hơn với Keras 3...")
+                try:
+                    subprocess.check_call(
+                        [sys.executable, "-m", "pip", "install", "tf-keras>=2.15.0", "-q"],
+                        timeout=60,
+                        stderr=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL
+                    )
+                    import tf_keras
+                    error_details.append("tf-keras: Installed successfully")
+                    tf_keras_available = True
+                    st.success("✅ tf-keras đã được cài đặt")
+                except subprocess.TimeoutExpired:
+                    error_details.append("tf-keras: Installation timeout (skipping)")
+                    st.warning("⚠️ Không thể cài đặt tf-keras (timeout). Tiếp tục không có tf-keras...")
+                except Exception as install_error:
+                    error_details.append(f"tf-keras: Installation failed (non-critical): {str(install_error)}")
+                    # Không hiển thị lỗi - chỉ log
+            except Exception as e:
+                error_details.append(f"tf-keras: Check failed (non-critical): {str(e)}")
+            
+            # Tiếp tục dù không có tf-keras - không fail
+            if not tf_keras_available:
+                st.info("💡 PhoWhisper sẽ hoạt động mà không có tf-keras. Nếu gặp lỗi, thử cài: `pip install tf-keras tensorflow`")
         
         # 4. Check memory usage before loading model
         error_details.append("\n=== Memory Check ===")

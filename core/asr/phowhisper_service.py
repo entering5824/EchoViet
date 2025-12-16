@@ -6,6 +6,24 @@ import os
 import sys
 import traceback
 
+def check_python_version():
+    """
+    Kiểm tra Python version và cảnh báo nếu không phù hợp với Streamlit Cloud
+    
+    Returns:
+        Tuple (is_valid: bool, warning_message: Optional[str])
+    """
+    version = sys.version_info
+    if version.major == 3 and 9 <= version.minor <= 10:
+        return True, None
+    
+    warning_msg = (
+        f"⚠️ Python {version.major}.{version.minor} được phát hiện. "
+        f"Streamlit Cloud khuyến nghị Python 3.9-3.10. "
+        f"Python 3.11+ hoặc 3.8- có thể gây lỗi với Whisper/PhoWhisper."
+    )
+    return False, warning_msg
+
 # Setup FFmpeg trước khi import các thư viện khác
 # PhoWhisper sử dụng transformers pipeline, có thể cần ffmpeg qua librosa
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -35,24 +53,6 @@ import subprocess
 import time
 import shutil
 from core.audio.audio_processor import _make_safe_temp_copy
-
-def check_python_version():
-    """
-    Kiểm tra Python version và cảnh báo nếu không phù hợp với Streamlit Cloud
-    
-    Returns:
-        Tuple (is_valid: bool, warning_message: Optional[str])
-    """
-    version = sys.version_info
-    if version.major == 3 and 9 <= version.minor <= 10:
-        return True, None
-    
-    warning_msg = (
-        f"⚠️ Python {version.major}.{version.minor} được phát hiện. "
-        f"Streamlit Cloud khuyến nghị Python 3.9-3.10. "
-        f"Python 3.11+ hoặc 3.8- có thể gây lỗi với Whisper/PhoWhisper."
-    )
-    return False, warning_msg
 
 def check_ffmpeg_for_librosa():
     """

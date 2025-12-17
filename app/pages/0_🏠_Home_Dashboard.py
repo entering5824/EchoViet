@@ -1,108 +1,112 @@
 """
 Home / Dashboard Page
-Trang chính với giới thiệu, trạng thái hệ thống, và shortcuts
+Trang chính – overview & navigation
 """
 import streamlit as st
 import os
 import sys
 
-# Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from app.components.layout import apply_custom_css
 from app.components.status_display import render_status_display
 from app.components.footer import render_footer
-
-# Apply custom CSS
-apply_custom_css()
+from app.components.pipeline_diagram import render_pipeline_diagram
 
 # Page config
 st.set_page_config(
     page_title="Dashboard - Vietnamese Speech to Text",
-    page_icon="🏠",
+    page_icon="🎤",
     layout="wide"
 )
 
-# Header
+apply_custom_css()
+
+# ===== Header =====
 st.markdown(
-    '<div class="main-header">🎤 Vietnamese Speech to Text System</div>',
+    '<div class="main-header">🎤 Vietnamese Speech to Text</div>',
     unsafe_allow_html=True
 )
+st.caption("Hệ thống chuyển đổi giọng nói tiếng Việt thành văn bản – tối ưu cho họp & ghi chép")
 
-st.markdown("### Hệ thống chuyển đổi giọng nói tiếng Việt thành văn bản tự động")
+# ===== Main =====
+col_main, col_nav = st.columns([2.2, 1])
 
-# Main content
-col1, col2 = st.columns([2, 1])
+with col_main:
+    st.markdown("### 📌 Tổng quan")
 
-with col1:
     st.markdown("""
-    #### 📋 Giới thiệu
+    Hệ thống hỗ trợ **chuyển đổi audio tiếng Việt → văn bản** với độ chính xác cao,
+    tập trung vào **cuộc họp, phỏng vấn và ghi chú dài**.
+    """)
     
-    Hệ thống này cung cấp giải pháp chuyển đổi giọng nói tiếng Việt thành văn bản một cách tự động và chính xác, 
-    đặc biệt tối ưu cho việc ghi chép cuộc họp.
-    
-    **Tính năng chính:**
-    - 🎤 Nhận diện giọng nói tiếng Việt với độ chính xác cao
-    - 👥 Phân biệt người nói (Speaker Diarization)
-    - ✨ Xử lý hậu kỳ với AI (grammar, punctuation)
-    - 📊 Thống kê và báo cáo chi tiết
-    - 📤 Xuất nhiều định dạng (TXT, DOCX, PDF, JSON)
-    
-    #### 🚀 Bắt đầu nhanh
-    
-    1. **Upload Audio**: Chọn file audio hoặc ghi âm trực tiếp
-    2. **Transcribe**: Chọn model và chạy nhận diện giọng nói
-    3. **Enhance**: Cải thiện chất lượng văn bản với AI
-    4. **Export**: Xuất kết quả theo định dạng mong muốn
+    # Pipeline Diagram
+    st.markdown("#### 🔄 Quy trình xử lý")
+    render_pipeline_diagram()
+
+    st.markdown("#### ✨ Tính năng nổi bật")
+    st.markdown("""
+    - 🎤 **Nhận diện giọng nói** tiếng Việt (Whisper / PhoWhisper)
+    - 👥 **Phân biệt người nói** (Speaker Diarization)
+    - ✨ **AI Text Enhancement** (dấu câu, viết hoa, làm sạch)
+    - 📤 **Xuất đa định dạng** (TXT / DOCX / PDF / JSON)
     """)
 
-with col2:
-    st.markdown("#### 🎯 Shortcuts")
-    
+with col_nav:
+    st.markdown("### 🚀 Bắt đầu")
+
     if st.button("🎤 Audio Input", use_container_width=True, type="primary"):
         st.switch_page("pages/1_🎤_Audio_Input.py")
-    
+
+    st.divider()
+
+    st.markdown("### 🔗 Điều hướng nhanh")
+
     if st.button("📝 Transcription", use_container_width=True):
         st.switch_page("pages/2_📝_Transcription.py")
-    
-    if st.button("👥 Speaker Diarization", use_container_width=True):
-        st.switch_page("pages/3_👥_Speaker_Diarization.py")
-    
-    if st.button("✨ Post-Processing", use_container_width=True):
-        st.switch_page("pages/4_✨_Post_Processing.py")
-    
-    if st.button("📊 Export & Reporting", use_container_width=True):
-        st.switch_page("pages/5_📊_Export_Reporting.py")
-    
-    if st.button("⚙️ Settings", use_container_width=True):
-        st.switch_page("pages/6_⚙️_Settings.py")
 
-# System Status
-st.markdown("---")
+    if st.button("✨ Speaker & Enhancement", use_container_width=True):
+        st.switch_page("pages/3_✨_Speaker_Enhancement.py")
+
+    if st.button("📊 Export & Reporting", use_container_width=True):
+        st.switch_page("pages/4_📊_Export_Reporting.py")
+    
+    st.divider()
+    st.markdown("### ⚙️ Advanced")
+    
+    with st.expander("🔧 Technical Settings"):
+        if st.button("⚙️ Advanced Settings", use_container_width=True):
+            st.switch_page("pages/5_⚙️_Advanced_Settings.py")
+        
+        if st.button("📈 Analysis & Evaluation", use_container_width=True):
+            st.switch_page("pages/6_📈_Analysis_Evaluation.py")
+        
+        if st.button("🔌 API / System Info", use_container_width=True):
+            st.switch_page("pages/7_🔌_API_System.py")
+
+# ===== System status =====
+st.divider()
 render_status_display()
 
-# Tips & News
-st.markdown("---")
-col1, col2 = st.columns(2)
+# ===== Help / Info =====
+st.divider()
+col_help1, col_help2 = st.columns(2)
 
-with col1:
-    with st.expander("💡 Tips & Best Practices"):
+with col_help1:
+    with st.expander("💡 Tips sử dụng"):
         st.markdown("""
-        - **Chất lượng audio**: Sử dụng microphone chất lượng tốt, giảm tiếng ồn nền
-        - **Độ dài file**: Hệ thống hỗ trợ audio dài, tự động chia nhỏ để xử lý
-        - **Model selection**: PhoWhisper-medium được khuyến nghị cho tiếng Việt
-        - **Speaker diarization**: Hoạt động tốt nhất với 2-4 người nói
-        - **Export**: Sử dụng DOCX cho báo cáo chính thức, JSON cho tích hợp API
+        - Ưu tiên audio **ít nhiễu**, rõ giọng
+        - File dài sẽ được **tự động chia đoạn**
+        - Speaker diarization hiệu quả nhất với **2–4 người nói**
         """)
 
-with col2:
-    with st.expander("🔒 Privacy & Security"):
+with col_help2:
+    with st.expander("🔒 Quyền riêng tư & bảo mật"):
         st.markdown("""
-        - **Xử lý local**: Audio được xử lý trên server, không gửi đến bên thứ ba
-        - **Tự động xóa**: File tạm được tự động xóa sau khi xử lý
-        - **Bảo mật**: Không lưu trữ audio hoặc transcript trừ khi bạn export
-        - **API Keys**: Chỉ sử dụng khi cần tải model từ HuggingFace
+        - Audio xử lý trên server, **không chia sẻ bên thứ ba**
+        - File tạm được **tự động xóa**
+        - Không lưu audio / transcript nếu không export
         """)
 
-# Footer
+# ===== Footer =====
 render_footer()

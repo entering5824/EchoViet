@@ -57,6 +57,31 @@ def capitalize_sentences(text: str) -> str:
     
     return result
 
+def normalize_vietnamese(text: str) -> str:
+    """Apply basic Vietnamese text normalization.
+
+    - Unicode NFC normalization
+    - Remove common bracketed noise tokens (e.g., [laughter])
+    - Normalize spacing and punctuation
+    """
+    if not text:
+        return ""
+
+    import unicodedata
+    txt = unicodedata.normalize('NFC', text)
+
+    # Remove bracketed tokens like [laughter], [noise], [inaudible]
+    txt = re.sub(r"\[.*?\]", "", txt)
+
+    # Normalize whitespace
+    txt = re.sub(r"\s+", " ", txt).strip()
+
+    # Fix spacing around punctuation
+    txt = re.sub(r"\s+([,.!?;:])", r"\1", txt)
+
+    return txt
+
+
 def format_text(text: str, options: Dict) -> str:
     """
     Format text với các options

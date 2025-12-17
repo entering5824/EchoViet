@@ -11,7 +11,7 @@ import seaborn as sns
 import io
 import streamlit as st
 import tempfile
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 def validate_audio_format(file_extension: str) -> Tuple[bool, str]:
     """
@@ -138,12 +138,22 @@ def load_audio(file, sr=16000):
             pass
         return None, None
 
-def preprocess_audio(y, sr, normalize=True, remove_noise=False):
-    """Tiền xử lý audio"""
+def preprocess_audio(y, sr, normalize: bool = False, remove_noise: bool = False):
+    """Tiền xử lý audio
+
+    Notes:
+    - Default `normalize=False` because ASR pipelines typically perform a
+      single, canonical normalization step at the top-level (see
+      `normalize_audio_to_wav`). Enabling `normalize` here is useful for
+      visualization or other non-ASR use-cases but may be redundant for ASR.
+    - `remove_noise` applies a simple high-pass filter; aggressive filtering can
+      harm ASR quality and is **not recommended** by default. Keep `remove_noise`
+      False unless you have noisy recordings and have validated the effect.
+    """
     if y is None:
         return None
     
-    # Normalize
+    # Normalize (off by default)
     if normalize:
         y = librosa.util.normalize(y)
     
@@ -226,6 +236,10 @@ def apply_noise_reduction(y: np.ndarray, sr: int, cutoff: int = 80):
 def chunk_signal(y: np.ndarray, sr: int, chunk_seconds: int) -> List[Tuple[int, int]]:
     """
     Split signal into chunks by duration (seconds).
+
+    NOTE: This simple time-based chunking is useful for some use-cases but is
+    not recommended as the primary method for ASR segmentation — prefer
+    VAD-based segmentation (see `detect_speech_segments`).
     """
     total_samples = len(y)
     chunk_len = int(chunk_seconds * sr)
@@ -236,6 +250,58 @@ def chunk_signal(y: np.ndarray, sr: int, chunk_seconds: int) -> List[Tuple[int, 
         end = min(start + chunk_len, total_samples)
         ranges.append((start, end))
     return ranges
+
+
+def detect_speech_segments(y: np.ndarray, sr: int, vad_threshold: float = 0.5, min_gap: float = 0.5, min_dur: float = None, max_dur: float = None, intent: str = "asr") -> List[Dict]:
+    """Detect speech regions using Silero VAD and return windows suitable for the given intent.
+
+    Args:
+        y, sr: audio samples and sample rate
+        vad_threshold: Silero VAD threshold (higher -> fewer speech regions)
+        min_gap: maximum gap (s) to merge adjacent speech segments
+        min_dur / max_dur: window sizing; if None defaults depend on `intent`
+        intent: 'asr' (default) or 'diarization' to pick sensible window sizes
+
+    Returns a list of dicts: [{'start': float, 'end': float}, ...]. If Silero VAD
+    cannot be loaded or finds no speech, this function falls back to returning
+    a single window that spans the whole audio.
+    """
+    # Pick sensible window sizes based on intent if not provided
+    if min_dur is None or max_dur is None:
+        if intent == "asr":
+            min_dur = 20.0 if min_dur is None else min_dur
+            max_dur = 30.0 if max_dur is None else max_dur
+        elif intent == "diarization":
+            # diarization benefits from short segments
+            min_dur = 2.0 if min_dur is None else min_dur
+            max_dur = 8.0 if max_dur is None else max_dur
+        else:
+            min_dur = 10.0 if min_dur is None else min_dur
+            max_dur = 30.0 if max_dur is None else max_dur
+
+    try:
+        from core.audio.vad import (
+            load_silero_vad,
+            get_speech_timestamps_from_array,
+            merge_close_timestamps,
+            group_segments_into_windows,
+        )
+    except Exception:
+        # VAD module not available
+        return [{"start": 0.0, "end": len(y) / sr}]
+
+    model, utils = load_silero_vad(device="cpu")
+    if model is None or utils is None:
+        return [{"start": 0.0, "end": len(y) / sr}]
+
+    timestamps = get_speech_timestamps_from_array(y, sr, model, utils, threshold=vad_threshold)
+    timestamps = merge_close_timestamps(timestamps, max_gap=min_gap)
+    windows = group_segments_into_windows(timestamps, min_dur=min_dur, max_dur=max_dur, audio_duration=len(y) / sr)
+
+    if not windows:
+        return [{"start": 0.0, "end": len(y) / sr}]
+
+    return windows
 
 
 def format_timestamp(seconds: float) -> str:

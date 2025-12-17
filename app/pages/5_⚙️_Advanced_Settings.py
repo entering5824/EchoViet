@@ -1,6 +1,6 @@
 """
-Settings / Advanced Page
-Cấu hình nâng cao cho technical users
+Advanced Settings Page
+Cấu hình nâng cao cho technical users - Model sizes, hyperparameters, pipeline config
 """
 import streamlit as st
 import os
@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 
 from app.components.layout import apply_custom_css
 from core.utils.settings_manager import load_settings, save_settings, load_settings_from_file
+from core.asr.model_registry import get_all_models, get_model_info
 from config import config
 
 # Apply custom CSS
@@ -18,12 +19,13 @@ apply_custom_css()
 
 # Page config
 st.set_page_config(
-    page_title="Settings - Vietnamese Speech to Text",
+    page_title="Advanced Settings - Vietnamese Speech to Text",
     page_icon="⚙️",
     layout="wide"
 )
 
-st.header("⚙️ Settings & Advanced Configuration")
+st.header("⚙️ Advanced Settings & Configuration")
+st.caption("Trang này dành cho người dùng kỹ thuật. Thay đổi settings có thể ảnh hưởng đến hiệu suất và độ chính xác.")
 
 # Warning for non-technical users
 st.warning("⚠️ Trang này dành cho người dùng kỹ thuật. Thay đổi settings có thể ảnh hưởng đến hiệu suất và độ chính xác.")
@@ -43,6 +45,28 @@ with tab1:
     col1, col2 = st.columns(2)
     
     with col1:
+        # Model selection with size
+        all_models = get_all_models()
+        model_ids = list(all_models.keys())
+        
+        selected_model_id = st.selectbox(
+            "ASR Model",
+            model_ids,
+            help="Chọn model ASR"
+        )
+        
+        model_info = get_model_info(selected_model_id)
+        
+        # Model size selection (technical detail)
+        if model_info.get("sizes"):
+            model_size = st.selectbox(
+                "Model Size",
+                model_info["sizes"],
+                index=model_info["sizes"].index(model_info.get("default_size", model_info["sizes"][0])),
+                help="Kích thước model: tiny (nhanh, ít chính xác) → large (chậm, chính xác nhất)"
+            )
+            st.caption(f"💡 Model size được chọn: {model_size}")
+        
         whisper_model_path = st.text_input(
             "Whisper Model Path",
             value=current_settings["model"]["whisper_model_path"],
@@ -69,6 +93,21 @@ with tab1:
             ["fp32", "fp16", "int8"],
             index=["fp32", "fp16", "int8"].index(current_settings["model"]["precision"]),
             help="Model precision (fp32 recommended)"
+        )
+        
+        # Chunking settings (moved from Transcription page)
+        st.markdown("#### Chunking Settings")
+        enable_chunk = st.checkbox(
+            "Enable Chunking",
+            value=True,
+            help="Chia audio thành chunks để xử lý"
+        )
+        
+        chunk_seconds = st.selectbox(
+            "Chunk Length (seconds)",
+            [15, 30, 45, 60, 90],
+            index=2,  # Default 45
+            help="Độ dài mỗi chunk"
         )
     
     current_settings["model"]["whisper_model_path"] = whisper_model_path
@@ -168,6 +207,33 @@ with tab4:
             help="Bật VAD để phát hiện speech segments"
         )
         
+        vad_threshold = st.slider(
+            "VAD Threshold",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5,
+            step=0.1,
+            help="Ngưỡng để phát hiện speech"
+        )
+        
+        min_segment_duration = st.number_input(
+            "Min Segment Duration (s)",
+            min_value=0.1,
+            max_value=5.0,
+            value=0.5,
+            step=0.1,
+            help="Độ dài segment tối thiểu"
+        )
+        
+        max_segment_duration = st.number_input(
+            "Max Segment Duration (s)",
+            min_value=1.0,
+            max_value=60.0,
+            value=30.0,
+            step=1.0,
+            help="Độ dài segment tối đa"
+        )
+        
         diarization_backend = st.selectbox(
             "Diarization Backend",
             ["simple", "pyannote"],
@@ -176,6 +242,13 @@ with tab4:
         )
     
     with col2:
+        sample_rate = st.selectbox(
+            "Sample Rate (Hz)",
+            [8000, 16000, 22050, 44100],
+            index=1,  # Default 16000
+            help="Sample rate cho audio processing"
+        )
+        
         max_speakers = st.number_input(
             "Max Speakers",
             min_value=1,

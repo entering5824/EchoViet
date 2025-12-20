@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  streamlit-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vietnamese-stt-app
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount code for development (hot reload)
+      - ./app:/app/app
+      - ./core:/app/core
+      - ./export:/app/export
+      - ./main.py:/app/main.py
+      # Persist models cache
+      - model-cache:/root/.cache
+      # Persist temp files
+      - ./temp:/app/temp
+    environment:
+      - PYTHONUNBUFFERED=1
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+      # Model cache directory
+      - TRANSFORMERS_CACHE=/root/.cache/huggingface
+      - HF_HOME=/root/.cache/huggingface
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 8501)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: FastAPI service (uncomment if needed)
+  # api-server:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: vietnamese-stt-api
+  #   command: uvicorn core.api.server:app --host 0.0.0.0 --port 8000
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - ./core:/app/core
+  #     - model-cache:/root/.cache
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #   restart: unless-stopped
+
+volumes:
+  model-cache:
+    driver: local
+

@@ -2,8 +2,35 @@
 Layout Utilities và CSS Styles
 """
 import streamlit as st
+import os
 
-def render_page_header(title: str, caption: str = None, icon: str = None):
+def render_logo():
+    """Render logo ở đầu trang"""
+    # Tìm logo từ nhiều vị trí có thể
+    possible_paths = [
+        os.path.join(os.path.dirname(__file__), '../../assets/logo.webp'),
+        os.path.join(os.path.dirname(__file__), '../assets/logo.webp'),
+        'assets/logo.webp',
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '../../assets/logo.webp')),
+    ]
+    
+    logo_path = None
+    for path in possible_paths:
+        abs_path = os.path.abspath(path) if not os.path.isabs(path) else path
+        if os.path.exists(abs_path):
+            logo_path = abs_path
+            break
+    
+    if logo_path:
+        # Center logo
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.image(logo_path, use_container_width=True)
+    else:
+        # Fallback nếu không tìm thấy logo
+        st.markdown("<!-- Logo not found -->", unsafe_allow_html=True)
+
+def render_page_header(title: str, caption: str = None, icon: str = None, show_logo: bool = True):
     """
     Render page header thống nhất cho tất cả các page
     
@@ -11,7 +38,12 @@ def render_page_header(title: str, caption: str = None, icon: str = None):
         title: Tiêu đề page
         caption: Mô tả ngắn (optional)
         icon: Icon emoji (optional, sẽ được thêm vào title nếu có)
+        show_logo: Hiển thị logo (default: True)
     """
+    # Render logo nếu được yêu cầu
+    if show_logo:
+        render_logo()
+    
     # Format title với icon
     if icon:
         header_text = f"{icon} {title}"
@@ -32,6 +64,19 @@ def apply_custom_css():
     """Apply custom CSS styles cho toàn bộ app"""
     st.markdown("""
     <style>
+    /* Logo Container */
+    .logo-container {
+        text-align: center;
+        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+    }
+    
+    .logo-container img {
+        max-width: 200px;
+        height: auto;
+        margin: 0 auto;
+    }
+    
     /* Main Header */
     .main-header {
         font-size: 2.5rem;

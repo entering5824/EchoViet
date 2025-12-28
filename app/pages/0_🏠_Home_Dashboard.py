@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.components.layout import apply_custom_css
+from app.components.layout import apply_custom_css, render_page_header
 from app.components.status_display import render_status_display
 from app.components.footer import render_footer
 from app.components.pipeline_diagram import render_pipeline_diagram
@@ -23,11 +23,12 @@ st.set_page_config(
 apply_custom_css()
 
 # ===== Header =====
-st.markdown(
-    '<div class="main-header">🎤 Vietnamese Speech to Text</div>',
-    unsafe_allow_html=True
+render_page_header(
+    "Vietnamese Speech to Text",
+    "Hệ thống chuyển đổi giọng nói tiếng Việt thành văn bản – tối ưu cho họp & ghi chép",
+    "🎤",
+    show_logo=True
 )
-st.caption("Hệ thống chuyển đổi giọng nói tiếng Việt thành văn bản – tối ưu cho họp & ghi chép")
 
 # ===== Main =====
 col_main, col_nav = st.columns([2.2, 1])

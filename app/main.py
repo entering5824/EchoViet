@@ -34,7 +34,7 @@ st.set_page_config(
 # =========================
 # BASE_DIR đã được set ở trên
 
-from app.components.layout import apply_custom_css
+from app.components.layout import apply_custom_css, render_page_header
 from app.components.footer import render_footer
 from core.auth.session import init_session
 
@@ -43,12 +43,11 @@ from core.auth.session import init_session
 # =========================
 def render_home():
     # Redirect to new Dashboard if available
-    st.markdown(
-        '<div class="main-header">'
-        'Designing and Developing a Vietnamese Speech to Text System '
-        'for Automatic Meeting Transcription'
-        '</div>',
-        unsafe_allow_html=True,
+    render_page_header(
+        "Designing and Developing a Vietnamese Speech to Text System for Automatic Meeting Transcription",
+        None,
+        None,
+        show_logo=True
     )
 
     st.markdown(

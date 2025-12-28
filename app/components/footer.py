@@ -19,11 +19,13 @@ def render_footer():
             font-size:15px;
             line-height:1.55;
         ">
+                    <span style="font-weight:600; font-size:17px;">Github: https://github.com/entering5824/EchoViet</span><br>
+
+        </div>
             <span style="font-weight:600; font-size:17px;">Students</span><br>
             • Phạm Nguyễn Minh Tú — phamtuofficial5824@gmail.com<br>
             • Trần Lê Hữu Nghĩa — nghíatlh22@uef.edu.vn<br>
-            • Student 3 — email<br>
-            • Student 4 — email<br>
+            • Cao Minh Phú — phucm22@uef.edu.vn<br>
         </div>
         """,
         unsafe_allow_html=True

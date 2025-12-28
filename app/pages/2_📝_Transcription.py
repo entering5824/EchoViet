@@ -300,11 +300,6 @@ def run_chunked_transcription(run_fn):
                     else:
                         ts = ""
                     results.append(ts + text.strip())
-            else:
-                # Transcription returned None or empty - log but continue
-                error_count += 1
-                if error_count == 1:  # Only show warning once
-                    st.warning(f"⚠️ Chunk {i}/{len(ranges)}: Transcription failed or returned empty. Check error messages above.")
         except Exception as chunk_err:
             error_count += 1
             error_msg = str(chunk_err)

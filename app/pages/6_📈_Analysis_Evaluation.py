@@ -10,8 +10,9 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.components.layout import apply_custom_css
+from app.components.layout import apply_custom_css, render_page_header
 from app.components.statistics_display import calculate_statistics
+from app.components.footer import render_footer
 
 # Apply custom CSS
 apply_custom_css()
@@ -23,8 +24,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.header("📈 Analysis & Evaluation")
-st.caption("Thống kê chi tiết, so sánh model, và đánh giá hiệu suất")
+render_page_header("Analysis & Evaluation", "Thống kê chi tiết, so sánh model, và đánh giá hiệu suất", "📈")
 
 # Initialize session state
 for key, default in (
@@ -117,11 +117,11 @@ with tab2:
     st.markdown("#### Model Performance Comparison")
     
     comparison_data = {
-        "Model": ["Whisper tiny", "Whisper small", "Whisper medium", "PhoWhisper base", "PhoWhisper medium"],
-        "Speed": ["⚡⚡⚡", "⚡⚡", "⚡", "⚡⚡⚡", "⚡"],
-        "Accuracy": ["⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐"],
-        "Memory": ["Low", "Medium", "High", "Low", "Medium"],
-        "Use Case": ["Demo/Preview", "General", "High Quality", "Vietnamese Focus", "Vietnamese Best"]
+        "Model": ["Whisper tiny", "Whisper small", "Whisper medium"],
+        "Speed": ["⚡⚡⚡", "⚡⚡", "⚡"],
+        "Accuracy": ["⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐"],
+        "Memory": ["Low", "Medium", "High"],
+        "Use Case": ["Demo/Preview", "General", "High Quality"]
     }
     
     try:
@@ -140,7 +140,7 @@ with tab2:
         
         # Sample data for visualization
         model_data = {
-            "Model": ["Whisper tiny", "Whisper small", "Whisper medium", "PhoWhisper base", "PhoWhisper medium"],
+            "Model": ["Whisper tiny", "Whisper small", "Whisper medium"],
             "Speed Score": [9, 7, 4, 8, 5],
             "Accuracy Score": [5, 7, 9, 7, 9]
         }
@@ -244,4 +244,7 @@ with tab3:
 st.markdown("---")
 if st.button("🏠 Back to Home", use_container_width=True):
     st.switch_page("pages/0_🏠_Home_Dashboard.py")
+
+# ===== Footer =====
+render_footer()
 

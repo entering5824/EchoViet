@@ -11,8 +11,9 @@ import json
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.components.layout import apply_custom_css
+from app.components.layout import apply_custom_css, render_page_header
 from app.components.diarization_timeline import render_diarization_timeline
+from app.components.footer import render_footer
 from core.diarization.speaker_diarization import (
     simple_speaker_segmentation, format_with_speakers, format_time
 )
@@ -46,8 +47,7 @@ for key, default in (
 ):
     st.session_state.setdefault(key, default)
 
-st.header("✨ Speaker & Text Enhancement")
-st.caption("Phân biệt người nói và làm sạch văn bản với AI")
+render_page_header("Speaker & Text Enhancement", "Phân biệt người nói và làm sạch văn bản với AI", "✨")
 
 # Check prerequisites
 if not st.session_state.transcript_text:
@@ -257,4 +257,7 @@ with col1:
 with col2:
     if st.button("🏠 Back to Home", use_container_width=True):
         st.switch_page("pages/0_🏠_Home_Dashboard.py")
+
+# ===== Footer =====
+render_footer()
 

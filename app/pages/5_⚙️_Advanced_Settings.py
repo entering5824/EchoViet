@@ -9,7 +9,8 @@ import sys
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.components.layout import apply_custom_css
+from app.components.layout import apply_custom_css, render_page_header
+from app.components.footer import render_footer
 from core.utils.settings_manager import load_settings, save_settings, load_settings_from_file
 from core.asr.model_registry import get_all_models, get_model_info
 from config import config
@@ -24,8 +25,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.header("⚙️ Advanced Settings & Configuration")
-st.caption("Trang này dành cho người dùng kỹ thuật. Thay đổi settings có thể ảnh hưởng đến hiệu suất và độ chính xác.")
+render_page_header("Advanced Settings & Configuration", "Trang này dành cho người dùng kỹ thuật. Thay đổi settings có thể ảnh hưởng đến hiệu suất và độ chính xác.", "⚙️")
 
 # Warning for non-technical users
 st.warning("⚠️ Trang này dành cho người dùng kỹ thuật. Thay đổi settings có thể ảnh hưởng đến hiệu suất và độ chính xác.")
@@ -72,12 +72,6 @@ with tab1:
             value=current_settings["model"]["whisper_model_path"],
             help="Đường dẫn đến Whisper model (để trống để dùng default)"
         )
-        
-        phowhisper_repo = st.text_input(
-            "PhoWhisper Repository",
-            value=current_settings["model"]["phowhisper_repo"],
-            help="HuggingFace repo cho PhoWhisper"
-        )
     
     with col2:
         device = st.selectbox(
@@ -111,7 +105,6 @@ with tab1:
         )
     
     current_settings["model"]["whisper_model_path"] = whisper_model_path
-    current_settings["model"]["phowhisper_repo"] = phowhisper_repo
     current_settings["model"]["device"] = device
     current_settings["model"]["precision"] = precision
 
@@ -363,4 +356,7 @@ with col3:
 # Display current settings
 with st.expander("📋 Current Settings (JSON)"):
     st.json(current_settings)
+
+# ===== Footer =====
+render_footer()
 

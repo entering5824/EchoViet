@@ -1,6 +1,6 @@
 """
 Model Registry
-Quản lý ASR models: Whisper và PhoWhisper
+Quản lý ASR models: Whisper
 """
 from typing import Dict, List, Optional
 
@@ -13,21 +13,9 @@ MODELS: Dict[str, Dict] = {
         "sizes": ["tiny", "base", "small", "medium", "large"],
         "default_size": "base",
         "description": "Mô hình đa ngôn ngữ từ OpenAI, benchmark chuẩn cho ASR",
-        "recommended": False,
-        "vietnamese_support": True,
-        "dependencies": ["openai-whisper", "torch"]
-    },
-    "phowhisper": {
-        "name": "PhoWhisper",
-        "type": "Whisper fine-tune",
-        "category": "Tiếng Việt chuyên biệt",
-        "service": "phowhisper_service",
-        "sizes": ["small", "medium", "base"],
-        "default_size": "medium",
-        "description": "Whisper được fine-tune đặc biệt cho tiếng Việt, độ chính xác cao",
         "recommended": True,
         "vietnamese_support": True,
-        "dependencies": ["transformers", "torch"]
+        "dependencies": ["openai-whisper", "torch"]
     }
 }
 
@@ -79,7 +67,7 @@ def check_model_dependencies(model_id: str):
                 import transformers
             elif dep == "torch":
                 import torch
-            # Chỉ hỗ trợ Whisper và PhoWhisper
+            # Chỉ hỗ trợ Whisper
         except (ImportError, SyntaxError, IndentationError, AttributeError, Exception) as e:
             # Bắt tất cả exception để tránh crash khi check dependencies
             missing.append(dep)

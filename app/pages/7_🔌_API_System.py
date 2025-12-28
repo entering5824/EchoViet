@@ -11,7 +11,8 @@ import platform
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.components.layout import apply_custom_css
+from app.components.layout import apply_custom_css, render_page_header
+from app.components.footer import render_footer
 from core.audio.ffmpeg_setup import get_ffmpeg_info
 
 # Apply custom CSS
@@ -24,8 +25,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.header("🔌 API / System Information")
-st.caption("API endpoints, system info, và integration examples")
+render_page_header("API / System Information", "API endpoints, system info, và integration examples", "🔌")
 
 # Tabs
 tab1, tab2, tab3 = st.tabs(["🔌 API Endpoints", "💻 System Info", "📚 Integration Examples"])
@@ -55,7 +55,7 @@ Content-Type: multipart/form-data
 
 {
     "file": <audio_file>,
-    "model": "whisper" | "phowhisper",
+    "model": "whisper",
     "quality": "fast" | "balanced" | "accurate",
     "language": "vi"
 }
@@ -91,7 +91,7 @@ Content-Type: multipart/form-data
 {
     "status": "healthy",
     "version": "1.0.0",
-    "models_loaded": ["whisper", "phowhisper"]
+    "models_loaded": ["whisper"]
 }
         """, language="json")
     
@@ -216,7 +216,7 @@ with tab3:
 curl -X POST "http://localhost:8000/api/transcribe" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "file=@audio.wav" \\
-  -F "model=phowhisper" \\
+  -F "model=whisper" \\
   -F "quality=balanced" \\
   -F "language=vi"
     """, language="bash")
@@ -234,7 +234,7 @@ headers = {"Authorization": "Bearer YOUR_API_KEY"}
 with open("audio.wav", "rb") as f:
     files = {"file": f}
     data = {
-        "model": "phowhisper",
+        "model": "whisper",
         "quality": "balanced",
         "language": "vi"
     }
@@ -255,7 +255,7 @@ const axios = require('axios');
 
 const form = new FormData();
 form.append('file', fs.createReadStream('audio.wav'));
-form.append('model', 'phowhisper');
+form.append('model', 'whisper');
 form.append('quality', 'balanced');
 form.append('language', 'vi');
 
@@ -287,4 +287,7 @@ axios.post('http://localhost:8000/api/transcribe', form, {
 st.markdown("---")
 if st.button("🏠 Back to Home", use_container_width=True):
     st.switch_page("pages/0_🏠_Home_Dashboard.py")
+
+# ===== Footer =====
+render_footer()
 

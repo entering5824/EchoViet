@@ -3,6 +3,31 @@ Layout Utilities và CSS Styles
 """
 import streamlit as st
 
+def render_page_header(title: str, caption: str = None, icon: str = None):
+    """
+    Render page header thống nhất cho tất cả các page
+    
+    Args:
+        title: Tiêu đề page
+        caption: Mô tả ngắn (optional)
+        icon: Icon emoji (optional, sẽ được thêm vào title nếu có)
+    """
+    # Format title với icon
+    if icon:
+        header_text = f"{icon} {title}"
+    else:
+        header_text = title
+    
+    # Render header với class main-header
+    st.markdown(
+        f'<div class="main-header">{header_text}</div>',
+        unsafe_allow_html=True
+    )
+    
+    # Render caption nếu có
+    if caption:
+        st.caption(caption)
+
 def apply_custom_css():
     """Apply custom CSS styles cho toàn bộ app"""
     st.markdown("""

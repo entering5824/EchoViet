@@ -46,7 +46,7 @@ with col_main:
 
     st.markdown("#### ✨ Tính năng nổi bật")
     st.markdown("""
-    - 🎤 **Nhận diện giọng nói** tiếng Việt (Whisper / PhoWhisper)
+    - 🎤 **Nhận diện giọng nói** tiếng Việt (Whisper)
     - 👥 **Phân biệt người nói** (Speaker Diarization)
     - ✨ **AI Text Enhancement** (dấu câu, viết hoa, làm sạch)
     - 📤 **Xuất đa định dạng** (TXT / DOCX / PDF / JSON)

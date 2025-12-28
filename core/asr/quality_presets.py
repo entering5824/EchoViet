@@ -9,19 +9,16 @@ import torch
 QUALITY_PRESETS: Dict[str, Dict[str, str]] = {
     "fast": {
         "whisper": "tiny",
-        "phowhisper": "base",
         "description": "⚡ Nhanh, ít chính xác, ít tài nguyên",
         "tooltip": "Phù hợp cho demo, preview, hoặc Streamlit Cloud (RAM thấp)"
     },
     "balanced": {
         "whisper": "small",
-        "phowhisper": "small",  # or medium if available
         "description": "⚖️ Cân bằng tốc độ và độ chính xác",
         "tooltip": "Tốt cho hầu hết cuộc họp - giữ độ chính xác chấp nhận được mà không quá chậm"
     },
     "accurate": {
         "whisper": "medium",
-        "phowhisper": "medium",
         "description": "🎯 Chậm, chính xác nhất, nhiều tài nguyên",
         "tooltip": "Dùng cho transcript quan trọng (biên bản chính thức). Nếu có GPU, tự động khuyên dùng."
     }
@@ -33,7 +30,7 @@ def get_model_size_for_preset(preset: str, model_id: str) -> Optional[str]:
     
     Args:
         preset: Quality preset ("fast", "balanced", "accurate")
-        model_id: Model ID ("whisper" or "phowhisper")
+        model_id: Model ID ("whisper")
     
     Returns:
         Model size string (e.g., "tiny", "small", "medium") or None if invalid

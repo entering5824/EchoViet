@@ -25,7 +25,7 @@ def check_python_version():
     warning_msg = (
         f"⚠️ Python {version.major}.{version.minor} được phát hiện. "
         f"Streamlit Cloud khuyến nghị Python 3.9-3.10. "
-        f"Python 3.11+ hoặc 3.8- có thể gây lỗi với Whisper/PhoWhisper."
+        f"Python 3.11+ hoặc 3.8- có thể gây lỗi với Whisper."
     )
     return False, warning_msg
 
@@ -85,10 +85,58 @@ def load_whisper_model(model_size="base"):
             st.error(f"Lỗi khi load Whisper model: {error_msg}")
         return None, None
 
-def transcribe_audio(model, audio_path_or_array, sr=16000, language="vi", 
-                     task="transcribe", verbose=False):
+def get_vietnamese_initial_prompt(include_english: bool = True) -> str:
     """
-    Transcribe audio sử dụng Whisper
+    Tạo initial prompt tối ưu cho tiếng Việt và mixed language
+    
+    Args:
+        include_english: Có bao gồm từ tiếng Anh phổ biến không
+    
+    Returns:
+        Initial prompt string
+    """
+    # Các từ khóa tiếng Việt phổ biến để giúp model nhận diện tốt hơn
+    vietnamese_common_words = [
+        "xin chào", "cảm ơn", "vâng", "không", "được", "không được",
+        "hôm nay", "ngày mai", "hôm qua", "bây giờ", "sau đó",
+        "công ty", "dự án", "cuộc họp", "khách hàng", "đối tác",
+        "việc làm", "nhiệm vụ", "mục tiêu", "kết quả", "giải pháp",
+        "tốt", "tuyệt vời", "xuất sắc", "chấp nhận được", "cần cải thiện",
+        "đúng", "sai", "chính xác", "rõ ràng", "hiểu",
+        "vấn đề", "thách thức", "cơ hội", "rủi ro", "nguy cơ"
+    ]
+    
+    english_common_words = [
+        "okay", "yes", "no", "thank you", "hello", "meeting",
+        "project", "customer", "partner", "solution", "problem"
+    ]
+    
+    # Tạo prompt với context về mixed language
+    if include_english:
+        prompt = "Đây là đoạn ghi âm tiếng Việt, có thể có một số từ tiếng Anh như: " + ", ".join(english_common_words[:5])
+        prompt += ". Các từ tiếng Việt phổ biến: " + ", ".join(vietnamese_common_words[:10])
+    else:
+        prompt = "Đây là đoạn ghi âm tiếng Việt. " + ", ".join(vietnamese_common_words[:15])
+    
+    return prompt
+
+
+def transcribe_audio(model, audio_path_or_array, sr=16000, language="vi", 
+                     task="transcribe", verbose=False,
+                     initial_prompt: Optional[str] = None,
+                     beam_size: int = 5,
+                     temperature: float = 0.0,
+                     condition_on_previous_text: bool = True,
+                     best_of: int = 5,
+                     use_vietnamese_optimization: bool = True):
+    """
+    Transcribe audio với Whisper - CHUẨN cho tiếng Việt
+    
+    QUAN TRỌNG: Luôn dùng language="vi", fp16=False, verbose=False
+    để tránh "1 tảng chữ" và đảm bảo chất lượng tốt nhất.
+    """
+    """
+    Transcribe audio sử dụng Whisper với tối ưu cho tiếng Việt
     
     Args:
         model: Whisper model
@@ -97,6 +145,12 @@ def transcribe_audio(model, audio_path_or_array, sr=16000, language="vi",
         language: Ngôn ngữ (vi cho tiếng Việt)
         task: "transcribe" hoặc "translate"
         verbose: Hiển thị thông tin chi tiết
+        initial_prompt: Initial prompt để guide model (tự động tạo nếu None và use_vietnamese_optimization=True)
+        beam_size: Beam size cho beam search (5 = tốt cho tiếng Việt)
+        temperature: Temperature (0.0 = greedy, >0 = sampling)
+        condition_on_previous_text: Sử dụng context từ segment trước
+        best_of: Số lượng candidates để chọn best
+        use_vietnamese_optimization: Tự động áp dụng tối ưu cho tiếng Việt
     """
     try:
         if model is None:
@@ -155,14 +209,31 @@ def transcribe_audio(model, audio_path_or_array, sr=16000, language="vi",
                 st.error(f"❌ File không tồn tại trước khi transcribe: {audio_path_to_use}")
                 return None
 
-        # Transcribe
+        # Tạo initial prompt nếu cần
+        effective_prompt = initial_prompt
+        if use_vietnamese_optimization and language == "vi" and initial_prompt is None:
+            effective_prompt = get_vietnamese_initial_prompt(include_english=True)
+        
+        # Transcribe với các tham số tối ưu - CHUẨN cho tiếng Việt
         try:
+            transcribe_kwargs = {
+                "language": language,  # QUAN TRỌNG: Phải chỉ định language
+                "task": task,
+                "verbose": False,  # QUAN TRỌNG: verbose=False để tránh output lỗi
+                "fp16": False,  # QUAN TRỌNG: fp16=False để tránh lỗi và đảm bảo độ chính xác
+                "beam_size": beam_size,
+                "temperature": temperature,
+                "condition_on_previous_text": condition_on_previous_text,
+                "best_of": best_of,
+            }
+            
+            # Chỉ thêm initial_prompt nếu có
+            if effective_prompt:
+                transcribe_kwargs["initial_prompt"] = effective_prompt
+            
             result = model.transcribe(
                 audio_path_to_use,
-                language=language,
-                task=task,
-                verbose=verbose,
-                fp16=False  # Sử dụng fp32 để tránh lỗi trên CPU
+                **transcribe_kwargs
             )
             return result
         except FileNotFoundError as fnf_err:
@@ -257,8 +328,18 @@ def transcribe_audio(model, audio_path_or_array, sr=16000, language="vi",
             st.error(f"Lỗi khi transcribe: {error_msg}")
         return None
 
-def format_transcript(result: Dict, with_timestamps: bool = True) -> str:
-    """Format transcript từ kết quả Whisper"""
+def format_transcript(result: Dict, with_timestamps: bool = True, readable: bool = True) -> str:
+    """
+    Format transcript từ kết quả Whisper với segments dễ đọc
+    
+    Args:
+        result: Whisper result dict
+        with_timestamps: Có hiển thị timestamps không
+        readable: Có chia thành segments dễ đọc không (7-15 từ, ≤6s)
+    
+    Returns:
+        Formatted transcript string
+    """
     if result is None:
         return ""
     
@@ -267,6 +348,10 @@ def format_transcript(result: Dict, with_timestamps: bool = True) -> str:
     
     if not with_timestamps or not segments:
         return text
+    
+    # Chia lại segments cho dễ đọc nếu cần
+    if readable:
+        segments = split_segments_readable(segments, max_words=15, max_duration=6.0)
     
     # Format với timestamps
     formatted_lines = []
@@ -281,16 +366,147 @@ def format_transcript(result: Dict, with_timestamps: bool = True) -> str:
     return "\n".join(formatted_lines)
 
 def format_time(seconds: float) -> str:
-    """Format thời gian từ seconds sang HH:MM:SS"""
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    millis = int((seconds % 1) * 1000)
+    """
+    Format thời gian từ seconds sang format dễ đọc [0.00 - 3.20]
+    Chuẩn cho subtitle/transcript dễ đọc
+    """
+    return f"{seconds:.2f}"
+
+
+def split_text_readable(text: str, max_words: int = 15, max_sentences: int = 2) -> List[str]:
+    """
+    Chia text thành các đoạn dễ đọc
     
-    if hours > 0:
-        return f"{hours:02d}:{minutes:02d}:{secs:02d}.{millis:03d}"
+    Tiêu chuẩn:
+    - 7-15 từ mỗi đoạn (max_words)
+    - Không quá 2 câu mỗi đoạn (max_sentences)
+    - Mỗi đoạn ≤ 5-6 giây khi đọc
+    
+    Args:
+        text: Text cần chia
+        max_words: Số từ tối đa mỗi đoạn (default: 15)
+        max_sentences: Số câu tối đa mỗi đoạn (default: 2)
+    
+    Returns:
+        List các đoạn text đã chia
+    """
+    if not text or not text.strip():
+        return []
+    
+    import re
+    
+    # Chia theo câu (giữ lại dấu câu)
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    
+    chunks = []
+    current_chunk = []
+    current_word_count = 0
+    
+    for sentence in sentences:
+        if not sentence.strip():
+            continue
+            
+        words = sentence.split()
+        word_count = len(words)
+        
+        # Nếu câu hiện tại quá dài, chia nhỏ câu đó
+        if word_count > max_words:
+            # Chia câu thành các phần nhỏ hơn
+            for i in range(0, word_count, max_words):
+                part = " ".join(words[i:i + max_words])
+                chunks.append(part.strip())
+        else:
+            # Kiểm tra xem có thể thêm câu này vào chunk hiện tại không
+            if (len(current_chunk) < max_sentences and 
+                current_word_count + word_count <= max_words):
+                # Có thể thêm vào chunk hiện tại
+                current_chunk.append(sentence)
+                current_word_count += word_count
+            else:
+                # Lưu chunk hiện tại và bắt đầu chunk mới
+                if current_chunk:
+                    chunks.append(" ".join(current_chunk).strip())
+                current_chunk = [sentence]
+                current_word_count = word_count
+    
+    # Thêm chunk cuối cùng nếu còn
+    if current_chunk:
+        chunks.append(" ".join(current_chunk).strip())
+    
+    return [chunk for chunk in chunks if chunk]
+
+
+def split_segments_readable(segments: List[Dict], max_words: int = 15, max_duration: float = 6.0) -> List[Dict]:
+    """
+    Chia lại Whisper segments thành các đoạn dễ đọc hơn
+    
+    Args:
+        segments: List segments từ Whisper (có start, end, text)
+        max_words: Số từ tối đa mỗi đoạn (default: 15)
+        max_duration: Thời gian tối đa mỗi đoạn (giây, default: 6.0)
+    
+    Returns:
+        List segments mới với text đã được chia nhỏ và timestamps mới
+    """
+    readable_segments = []
+    
+    for seg in segments:
+        start = seg.get("start", 0)
+        end = seg.get("end", 0)
+        text = seg.get("text", "").strip()
+        
+        if not text:
+            continue
+        
+        # Chia text thành các đoạn nhỏ
+        sub_texts = split_text_readable(text, max_words=max_words, max_sentences=2)
+        
+        if not sub_texts:
+            continue
+        
+        # Tính thời gian cho mỗi đoạn
+        duration = end - start
+        num_parts = len(sub_texts)
+        per_part = duration / num_parts if num_parts > 0 else duration
+        
+        # Tạo segments mới với timestamps được chia đều
+        for i, sub_text in enumerate(sub_texts):
+            seg_start = round(start + i * per_part, 2)
+            seg_end = round(start + (i + 1) * per_part, 2)
+            
+            # Đảm bảo không vượt quá max_duration
+            if seg_end - seg_start > max_duration:
+                # Nếu một đoạn quá dài, chia đều lại
+                words = sub_text.split()
+                if len(words) > max_words:
+                    words_per_part = max_words
+                    num_sub_parts = (len(words) + words_per_part - 1) // words_per_part
+                    sub_duration = (seg_end - seg_start) / num_sub_parts
+                    
+                    for j in range(0, len(words), words_per_part):
+                        part_text = " ".join(words[j:j + words_per_part])
+                        part_start = seg_start + (j // words_per_part) * sub_duration
+                        part_end = min(seg_start + ((j // words_per_part) + 1) * sub_duration, seg_end)
+                        
+                        readable_segments.append({
+                            "start": round(part_start, 2),
+                            "end": round(part_end, 2),
+                            "text": part_text.strip()
+                        })
+                else:
+                    readable_segments.append({
+                        "start": seg_start,
+                        "end": seg_end,
+                        "text": sub_text.strip()
+                    })
     else:
-        return f"{minutes:02d}:{secs:02d}.{millis:03d}"
+                readable_segments.append({
+                    "start": seg_start,
+                    "end": seg_end,
+                    "text": sub_text.strip()
+                })
+    
+    return readable_segments
 
 def get_transcript_statistics(result: Dict, duration: float) -> Dict:
     """Tính toán thống kê transcript"""

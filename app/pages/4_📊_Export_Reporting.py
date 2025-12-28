@@ -10,8 +10,9 @@ import json
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.components.layout import apply_custom_css
+from app.components.layout import apply_custom_css, render_page_header
 from app.components.statistics_display import calculate_statistics
+from app.components.footer import render_footer
 from core.utils.export import export_txt, export_docx, export_pdf
 
 # Apply custom CSS
@@ -33,7 +34,7 @@ for key, default in (
 ):
     st.session_state.setdefault(key, default)
 
-st.header("📊 Export & Reporting")
+render_page_header("Export & Reporting", "Xuất transcript và xem thống kê chi tiết", "📊")
 
 # Check if transcript is available
 if not st.session_state.transcript_text:
@@ -231,4 +232,7 @@ else:
         height=300,
         key="export_preview"
     )
+
+# ===== Footer =====
+render_footer()
 

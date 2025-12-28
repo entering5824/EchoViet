@@ -31,7 +31,6 @@ class Config:
     
     # Model Configuration
     DEFAULT_WHISPER_MODEL: str = os.getenv("DEFAULT_WHISPER_MODEL", "base")
-    DEFAULT_PHOWHISPER_MODEL: str = os.getenv("DEFAULT_PHOWHISPER_MODEL", "medium")
     
     # Cache directories
     TRANSFORMERS_CACHE: str = os.getenv(

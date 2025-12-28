@@ -1,5 +1,5 @@
 # Python version: 3.9-3.10 recommended for Streamlit Cloud
-# Python 3.11+ may cause compatibility issues with Whisper/PhoWhisper
+# Python 3.11+ may cause compatibility issues with Whisper
 
 streamlit>=1.52.1
 openai-whisper>=20231117
@@ -21,15 +21,13 @@ protobuf>=3.20.0,<5.0.0
 transformers>=4.30.0
 accelerate>=0.20.0
 jiwer>=3.0.0
-# tf-keras>=2.15.0  # Optional - PhoWhisper có thể hoạt động mà không cần
+# tf-keras>=2.15.0  # Not required for Whisper
 # tensorflow>=2.15.0  # Optional - chỉ cần nếu muốn dùng tf-keras
 psutil>=5.9.0  # For memory monitoring
 
-# Dependencies cho Whisper và PhoWhisper:
+# Dependencies cho Whisper:
 # - openai-whisper: Whisper model
-# - transformers: PhoWhisper model
 # - torch, torchaudio: PyTorch backend
-# - tf-keras: Keras compatibility cho PhoWhisper
 # - imageio-ffmpeg: FFmpeg cho Whisper
 
 # API/Streaming

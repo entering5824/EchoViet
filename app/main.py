@@ -61,7 +61,7 @@ Hệ thống này cho phép bạn chuyển đổi giọng nói tiếng Việt th
 Sử dụng sidebar để điều hướng các chức năng hoặc truy cập **Home Dashboard** để xem tổng quan.
 
 ### 🔧 Công nghệ
-- Whisper / PhoWhisper
+- Whisper
 - Librosa, PyDub
 - Streamlit
 """

@@ -21,7 +21,7 @@ def simple_speaker_segmentation(audio_array, sr, segments, min_silence_duration=
     Args:
         audio_array: Audio data (numpy array)
         sr: Sample rate
-        segments: List of segments từ Whisper hoặc PhoWhisper
+        segments: List of segments từ Whisper
         min_silence_duration: Minimum silence duration để phân tách speaker
     
     Returns:

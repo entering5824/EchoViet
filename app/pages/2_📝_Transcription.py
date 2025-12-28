@@ -1,6 +1,6 @@
 """
 Transcription Page
-Chạy ASR (Whisper / PhoWhisper), chunking nhẹ, tối ưu cho Streamlit Cloud
+Chạy ASR với Whisper, chunking nhẹ, tối ưu cho Streamlit Cloud
 """
 import streamlit as st
 import os
@@ -13,8 +13,9 @@ import soundfile as sf
 # ================== PATH ==================
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.components.layout import apply_custom_css
+from app.components.layout import apply_custom_css, render_page_header
 from app.components.transcript_editor import render_transcript_editor
+from app.components.footer import render_footer
 
 from core.asr.model_registry import (
     get_all_models,
@@ -25,11 +26,10 @@ from core.asr.model_registry import (
 from core.asr.transcription_service import (
     load_whisper_model,
     transcribe_audio,
+    split_text_readable,
+    format_time,
 )
-from core.asr.phowhisper_service import (
-    load_phowhisper_model,
-    transcribe_phowhisper,
-)
+from core.nlp.post_processing import normalize_vietnamese, format_text
 from core.asr.quality_presets import (
     get_model_size_for_preset,
     get_preset_description,
@@ -38,7 +38,8 @@ from core.asr.quality_presets import (
     get_all_presets,
     detect_gpu,
 )
-from core.audio.audio_processor import chunk_signal, format_timestamp
+from core.audio.audio_processor import chunk_signal
+from core.asr.transcription_service import format_time
 from core.audio.ffmpeg_setup import ensure_ffmpeg
 
 # ================== ENV ==================
@@ -66,8 +67,7 @@ def init_state():
 init_state()
 
 # ================== HEADER ==================
-st.header("📝 Transcription")
-st.caption("Chạy ASR với Whisper / PhoWhisper, hỗ trợ audio dài")
+render_page_header("Transcription", "Chạy ASR với Whisper, hỗ trợ audio dài", "📝")
 
 # ================== GUARD ==================
 if st.session_state.audio_data is None:
@@ -96,7 +96,7 @@ selected_model_id = st.selectbox(
         all_models[mid]["name"]
         + (" 🌟" if mid in recommended else "")
     ),
-    help="Chọn mô hình ASR: Whisper (đa ngôn ngữ) hoặc PhoWhisper (tối ưu cho tiếng Việt)"
+    help="Chọn mô hình ASR: Whisper (đa ngôn ngữ, hỗ trợ tiếng Việt)"
 )
 
 model_info = get_model_info(selected_model_id)
@@ -221,14 +221,85 @@ def run_chunked_transcription(run_fn):
             
             # Run transcription
             result = run_fn(tmp_name_normalized)
-            text = safe_get_text(result)
             
-            if text:
-                if show_timestamps:
-                    ts = f"[{format_timestamp(s0 / st.session_state.audio_sr)} - {format_timestamp(s1 / st.session_state.audio_sr)}] "
-                else:
-                    ts = ""
-                results.append(ts + text.strip())
+            if result is None:
+                error_count += 1
+                continue
+            
+            # Lấy segments từ result và chia lại cho dễ đọc
+            segments = result.get("segments", [])
+            
+            if segments:
+                # Tính chunk start time (absolute) - offset từ đầu audio file
+                chunk_start_time = s0 / st.session_state.audio_sr
+                
+                # Xử lý từng segment gốc từ Whisper và chia lại cho dễ đọc
+                chunk_results = []
+                for original_seg in segments:
+                    seg_start = original_seg.get("start", 0)  # Timestamp tương đối trong chunk
+                    seg_end = original_seg.get("end", 0)      # Timestamp tương đối trong chunk
+                    seg_text = original_seg.get("text", "").strip()
+                    
+                    if not seg_text:
+                        continue
+                    
+                    # Chia text của segment này thành các đoạn nhỏ dễ đọc (7-15 từ, ≤2 câu)
+                    sub_texts = split_text_readable(seg_text, max_words=15, max_sentences=2)
+                    
+                    if not sub_texts:
+                        continue
+                    
+                    # Tính thời gian cho mỗi đoạn con (chia đều thời gian)
+                    seg_duration = seg_end - seg_start
+                    num_parts = len(sub_texts)
+                    per_part = seg_duration / num_parts if num_parts > 0 else seg_duration
+                    
+                    # Tạo readable segments với timestamps chính xác
+                    for i, sub_text in enumerate(sub_texts):
+                        # Timestamp tương đối trong segment gốc
+                        sub_start = seg_start + i * per_part
+                        sub_end = seg_start + (i + 1) * per_part
+                        
+                        # Áp dụng post-processing cho tiếng Việt
+                        processed_text = normalize_vietnamese(sub_text)
+                        processed_text = format_text(processed_text, {
+                            "improve_vietnamese": True,
+                            "punctuation": True,
+                            "capitalize": True,
+                            "remove_extra_spaces": True
+                        })
+                        
+                        if processed_text.strip():
+                            if show_timestamps:
+                                # Timestamp absolute từ đầu audio file
+                                abs_start = chunk_start_time + sub_start
+                                abs_end = chunk_start_time + sub_end
+                                ts = f"[{format_time(abs_start)} - {format_time(abs_end)}] "
+                            else:
+                                ts = ""
+                            
+                            chunk_results.append(ts + processed_text.strip())
+                
+                if chunk_results:
+                    results.extend(chunk_results)
+            else:
+                # Fallback: dùng text nếu không có segments
+                text = safe_get_text(result)
+                if text:
+                    # Áp dụng post-processing cho tiếng Việt
+                    text = normalize_vietnamese(text)
+                    text = format_text(text, {
+                        "improve_vietnamese": True,
+                        "punctuation": True,
+                        "capitalize": True,
+                        "remove_extra_spaces": True
+                    })
+                    
+                    if show_timestamps:
+                        ts = f"[{format_time(s0 / st.session_state.audio_sr)} - {format_time(s1 / st.session_state.audio_sr)}] "
+                    else:
+                        ts = ""
+                    results.append(ts + text.strip())
             else:
                 # Transcription returned None or empty - log but continue
                 error_count += 1
@@ -278,17 +349,14 @@ if st.button("🚀 Start Transcription", type="primary", use_container_width=Tru
                 if model is None:
                     st.error("❌ Không thể load Whisper model. Vui lòng kiểm tra lỗi ở trên.")
                     st.stop()
+                # Sử dụng tối ưu cho tiếng Việt (default: enabled)
                 text = run_chunked_transcription(
-                    lambda p: transcribe_audio(model, p, language="vi")
-                )
-
-            elif selected_model_id == "phowhisper":
-                model = load_phowhisper_model(model_size)
-                if model is None:
-                    st.error("❌ Không thể load PhoWhisper model. Vui lòng kiểm tra lỗi ở trên.")
-                    st.stop()
-                text = run_chunked_transcription(
-                    lambda p: transcribe_phowhisper(model, p, language="vi")
+                    lambda p: transcribe_audio(
+                        model, 
+                        p, 
+                        language="vi",
+                        use_vietnamese_optimization=True  # Tự động áp dụng initial prompt và tối ưu
+                    )
                 )
             else:
                 st.error("❌ Unsupported model")
@@ -360,3 +428,6 @@ if st.session_state.transcript_text:
     with col2:
         if st.button("📊 Export & Report", use_container_width=True):
             st.switch_page("pages/4_📊_Export_Reporting.py")
+
+# ===== Footer =====
+render_footer()

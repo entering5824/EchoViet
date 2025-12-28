@@ -14,7 +14,6 @@ def load_settings() -> Dict:
     settings = {
         "model": {
             "whisper_model_path": os.getenv("WHISPER_MODEL_PATH", ""),
-            "phowhisper_repo": os.getenv("PHOWHISPER_REPO", "vinai/PhoWhisper"),
             "device": "cpu" if config.is_cloud() else ("cuda" if os.getenv("USE_GPU", "true").lower() == "true" else "cpu"),
             "precision": os.getenv("MODEL_PRECISION", "fp32"),
         },

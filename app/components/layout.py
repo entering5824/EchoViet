@@ -22,10 +22,10 @@ def render_logo():
             break
     
     if logo_path:
-        # Center logo
-        col1, col2, col3 = st.columns([1, 2, 1])
+        # Center logo với kích thước nhỏ
+        col1, col2, col3 = st.columns([2, 1, 2])
         with col2:
-            st.image(logo_path, use_container_width=True)
+            st.image(logo_path, width=120)  # Kích thước cố định 120px
     else:
         # Fallback nếu không tìm thấy logo
         st.markdown("<!-- Logo not found -->", unsafe_allow_html=True)

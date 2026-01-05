@@ -211,12 +211,14 @@ uvicorn core.api.server:app --host 0.0.0.0 --port 8000
 │   │   ├── sidebar.py         # Shared sidebar với logo
 │   │   └── layout.py          # Layout utilities
 │   └── pages/                  # Streamlit pages
-│       ├── 1_📤_Upload_Record.py
-│       ├── 2_🎧_Preprocessing.py
-│       ├── 3_📝_Transcription.py
-│       ├── 4_👥_Speaker_Diarization.py
-│       ├── 5_📊_Export_Statistics.py
-│       └── 6_🔬_ASR_Benchmark.py
+│       ├── 0_🏠_Home_Dashboard.py
+│       ├── 1_🎤_Audio_Input.py
+│       ├── 2_📝_Transcription.py
+│       ├── 3_✨_Speaker_Enhancement.py
+│       ├── 4_📊_Export_Reporting.py
+│       ├── 5_⚙️_Advanced_Settings.py
+│       ├── 6_📈_Analysis_Evaluation.py
+│       └── 7_🔌_API_System.py
 ├── core/                       # AI/ML logic
 │   ├── audio/
 │   │   ├── audio_processor.py

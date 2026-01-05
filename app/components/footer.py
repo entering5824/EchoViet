@@ -8,7 +8,7 @@ def render_footer():
     """Render footer với thông tin students và instructor"""
     st.write("---")
     
-    # --- STUDENTS BOX ---
+    # --- GITHUB & STUDENTS BOX ---
     st.markdown(
         """
         <div style="
@@ -18,14 +18,24 @@ def render_footer():
             border:1px solid #f0e6b2;
             font-size:15px;
             line-height:1.55;
+            margin-bottom:18px;
         ">
-                    <span style="font-weight:600; font-size:17px;">Github: https://github.com/entering5824/EchoViet</span><br>
-
-        </div>
-            <span style="font-weight:600; font-size:17px;">Students</span><br>
-            • Phạm Nguyễn Minh Tú — phamtuofficial5824@gmail.com<br>
-            • Trần Lê Hữu Nghĩa — nghíatlh22@uef.edu.vn<br>
-            • Cao Minh Phú — phucm22@uef.edu.vn<br>
+            <div style="margin-bottom:12px;">
+                <span style="font-weight:600; font-size:17px; color:#f0e6b2;">Github: </span>
+                <a href="https://github.com/entering5824/EchoViet" 
+                   target="_blank" 
+                   style="color:#4a9eff; text-decoration:none;">
+                   https://github.com/entering5824/EchoViet
+                </a>
+            </div>
+            <div style="margin-top:12px;">
+                <span style="font-weight:600; font-size:17px; color:#f0e6b2;">Students:</span><br>
+                <span style="color:#e0e0e0;">
+                    • Phạm Nguyễn Minh Tú — phamtuofficial5824@gmail.com<br>
+                    • Trần Lê Hữu Nghĩa — nghíatlh22@uef.edu.vn<br>
+                    • Cao Minh Phú — phucm22@uef.edu.vn
+                </span>
+            </div>
         </div>
         """,
         unsafe_allow_html=True

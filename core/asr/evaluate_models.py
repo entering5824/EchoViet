@@ -1,5 +1,5 @@
 """
-Script đánh giá chất lượng mô hình: So sánh Whisper vs PhoWhisper
+Script đánh giá chất lượng mô hình: Đánh giá Whisper cho tiếng Việt
 Tính WER (Word Error Rate) và CER (Character Error Rate)
 """
 import os

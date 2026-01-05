@@ -95,6 +95,5 @@ def main():
     render_home()
     render_footer()
 
-
-if __name__ == "__main__":
-    main()
+# Run main function
+main()

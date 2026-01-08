@@ -20,6 +20,7 @@ from core.diarization.speaker_diarization import (
 )
 from core.nlp.post_processing import format_text, correct_punctuation, capitalize_sentences, normalize_vietnamese, improve_vietnamese_punctuation
 from core.nlp.keyword_extraction import extract_keywords, simple_summarize
+from core.nlp.gemini_enhancement import enhance_with_gemini, is_gemini_available
 from core.utils.export import export_docx, export_txt
 from core.audio.ffmpeg_setup import ensure_ffmpeg
 
@@ -398,6 +399,20 @@ if show_text_enhancement:
                 st.session_state.enhancement_mode = "recommended"
                 st.info("💡 **Chế độ Đề xuất**: Sử dụng cài đặt tối ưu. Bật 'Tùy chọn nâng cao' để tùy chỉnh.")
             
+            # Initialize variables to avoid NameError
+            auto_punctuation = True
+            capitalize_sent = True
+            remove_spaces = True
+            improve_vietnamese = True
+            extract_keywords_enabled = False
+            summarize_enabled = False
+            num_keywords = 10
+            num_sentences = 3
+            use_gemini = False
+            
+            # Check if Gemini is available
+            gemini_available = is_gemini_available()
+            
             # Enhancement options based on mode
             if st.session_state.enhancement_mode == "simple":
                 # Simple mode: Just apply recommended settings
@@ -407,6 +422,7 @@ if show_text_enhancement:
                 improve_vietnamese = True
                 extract_keywords_enabled = False
                 summarize_enabled = False
+                use_gemini = False
                 
                 st.markdown("**Cài đặt tự động:** Tự động sửa dấu câu, viết hoa đầu câu, loại bỏ khoảng trắng thừa, cải thiện tiếng Việt")
             
@@ -419,6 +435,18 @@ if show_text_enhancement:
                     capitalize_sent = st.checkbox("Viết hoa đầu câu", value=True, help="Viết hoa chữ cái đầu mỗi câu")
                     remove_spaces = st.checkbox("Loại bỏ khoảng trắng thừa", value=True, help="Xóa các khoảng trắng không cần thiết")
                     improve_vietnamese = st.checkbox("Cải thiện tiếng Việt", value=True, help="Áp dụng các cải thiện đặc biệt cho tiếng Việt")
+                    
+                    # Gemini AI option
+                    if gemini_available:
+                        use_gemini = st.checkbox(
+                            "🤖 Sử dụng Gemini AI (Khuyến nghị)",
+                            value=True,
+                            help="Sử dụng Google Gemini AI để cải thiện văn bản với độ chính xác cao hơn"
+                        )
+                        if use_gemini:
+                            st.info("💡 Gemini AI sẽ cải thiện văn bản với AI, sau đó áp dụng các cải thiện khác")
+                    else:
+                        st.info("💡 Để sử dụng Gemini AI, cần cấu hình GEMINI_API_KEY trong environment variables")
                 
                 with col2:
                     extract_keywords_enabled = st.checkbox("Extract keywords", value=True, help="Trích xuất từ khóa quan trọng")
@@ -458,6 +486,17 @@ if show_text_enhancement:
                     capitalize_sent = st.checkbox("Viết hoa đầu câu", value=True)
                     remove_spaces = st.checkbox("Loại bỏ khoảng trắng thừa", value=True)
                     improve_vietnamese = st.checkbox("Cải thiện tiếng Việt", value=True)
+                    
+                    # Gemini AI option
+                    if gemini_available:
+                        use_gemini = st.checkbox(
+                            "🤖 Sử dụng Gemini AI",
+                            value=False,
+                            help="Sử dụng Google Gemini AI để cải thiện văn bản"
+                        )
+                    else:
+                        st.info("💡 Để sử dụng Gemini AI, cần cấu hình GEMINI_API_KEY trong environment variables")
+                        use_gemini = False
                 
                 with col2:
                     st.markdown("**Analysis Options:**")
@@ -506,35 +545,57 @@ if show_text_enhancement:
                 st.markdown("**✨ Văn bản sau cải thiện:**")
                 st.info("Kết quả sẽ hiển thị ở đây sau khi bạn nhấn 'Áp dụng'")
             
-            # Apply enhancement button is already above
-        with st.spinner("⏳ Đang xử lý với AI..."):
-            try:
-                # Format text
-                formatting_options = {
-                    "punctuation": auto_punctuation,
-                    "capitalize": capitalize_sent,
-                    "remove_extra_spaces": remove_spaces,
-                    "improve_vietnamese": improve_vietnamese
-                }
-                
-                enhanced_text = format_text(st.session_state.transcript_text, formatting_options)
-                st.session_state.transcript_enhanced = enhanced_text
-                
-                st.success("✅ Đã xử lý thành công!")
-                
-                # Show preview of enhanced text
-                preview_enhanced = enhanced_text[:500] + "..." if len(enhanced_text) > 500 else enhanced_text
-                with preview_col2:
-                    st.text_area("Enhanced (preview):", preview_enhanced, height=200, disabled=True, key="preview_enhanced_result")
-                    st.caption(f"Hiển thị {min(500, len(enhanced_text))} ký tự đầu. Tổng: {len(enhanced_text)} ký tự")
-                
-                st.rerun()
-            except Exception as e:
-                st.error(f"❌ Lỗi khi cải thiện văn bản: {str(e)}")
-                st.info("💡 **Gợi ý**: \n- Kiểm tra transcript có hợp lệ không\n- Thử lại với chế độ 'Đơn giản'")
-                with st.expander("🔍 Chi tiết lỗi"):
-                    import traceback
-                    st.code(traceback.format_exc())
+            # Apply enhancement button
+            if st.button("✨ Áp Dụng Cải Thiện Văn Bản", type="primary", use_container_width=True, key="apply_enhance_tab"):
+                with st.spinner("⏳ Đang xử lý với AI..."):
+                    try:
+                        text_to_enhance = st.session_state.transcript_text
+                        
+                        # Step 1: Use Gemini AI if enabled
+                        if use_gemini and gemini_available:
+                            with st.spinner("🤖 Đang cải thiện với Gemini AI..."):
+                                try:
+                                    gemini_enhanced = enhance_with_gemini(text_to_enhance)
+                                    if gemini_enhanced:
+                                        text_to_enhance = gemini_enhanced
+                                        st.success("✅ Gemini AI đã cải thiện văn bản")
+                                    else:
+                                        st.warning("⚠️ Gemini AI không trả về kết quả, sử dụng phương pháp cơ bản")
+                                except Exception as gemini_error:
+                                    st.warning(f"⚠️ Lỗi khi sử dụng Gemini AI: {str(gemini_error)}. Sử dụng phương pháp cơ bản.")
+                        
+                        # Step 2: Apply formatting options
+                        formatting_options = {
+                            "punctuation": auto_punctuation,
+                            "capitalize": capitalize_sent,
+                            "remove_extra_spaces": remove_spaces,
+                            "improve_vietnamese": improve_vietnamese
+                        }
+                        
+                        enhanced_text = format_text(text_to_enhance, formatting_options)
+                        st.session_state.transcript_enhanced = enhanced_text
+                        
+                        # Save enhancement options to session state for later use
+                        st.session_state.enhancement_extract_keywords = extract_keywords_enabled
+                        st.session_state.enhancement_summarize = summarize_enabled
+                        st.session_state.enhancement_num_keywords = num_keywords
+                        st.session_state.enhancement_num_sentences = num_sentences
+                        
+                        st.success("✅ Đã xử lý thành công!")
+                        
+                        # Show preview of enhanced text
+                        preview_enhanced = enhanced_text[:500] + "..." if len(enhanced_text) > 500 else enhanced_text
+                        with preview_col2:
+                            st.text_area("Enhanced (preview):", preview_enhanced, height=200, disabled=True, key="preview_enhanced_result")
+                            st.caption(f"Hiển thị {min(500, len(enhanced_text))} ký tự đầu. Tổng: {len(enhanced_text)} ký tự")
+                        
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Lỗi khi cải thiện văn bản: {str(e)}")
+                        st.info("💡 **Gợi ý**: \n- Kiểm tra transcript có hợp lệ không\n- Thử lại với chế độ 'Đơn giản'\n- Kiểm tra GEMINI_API_KEY nếu sử dụng Gemini AI")
+                        with st.expander("🔍 Chi tiết lỗi"):
+                            import traceback
+                            st.code(traceback.format_exc())
     
     # Display enhanced transcript with side-by-side comparison
     if st.session_state.transcript_enhanced:
@@ -608,10 +669,12 @@ if show_text_enhancement:
                 use_container_width=True
             )
         
-        # Keywords
+        # Keywords - use session state values
+        extract_keywords_enabled = st.session_state.get("enhancement_extract_keywords", False)
         if extract_keywords_enabled:
             st.markdown("---")
             st.subheader("🔑 Keywords")
+            num_keywords = st.session_state.get("enhancement_num_keywords", 10)
             keywords = extract_keywords(enhanced_text, top_k=num_keywords)
             if keywords:
                 # Display as tags/chips
@@ -620,10 +683,12 @@ if show_text_enhancement:
             else:
                 st.info("Không tìm thấy keywords")
         
-        # Summary
+        # Summary - use session state values
+        summarize_enabled = st.session_state.get("enhancement_summarize", False)
         if summarize_enabled:
             st.markdown("---")
             st.subheader("📄 Summary")
+            num_sentences = st.session_state.get("enhancement_num_sentences", 3)
             summary = simple_summarize(enhanced_text, max_sentences=num_sentences)
             if summary:
                 st.info(f"**Tóm tắt:** {summary}")

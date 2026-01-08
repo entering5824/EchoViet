@@ -36,3 +36,5 @@ uvicorn>=0.23.0
 audio-recorder-streamlit>=0.0.8
 altair>=5.0.0
 
+# Gemini AI (Optional - for enhanced text improvement)
+google-generativeai>=0.3.0

@@ -192,10 +192,76 @@ def apply_custom_css():
         margin-bottom: 2rem;
     }
     
+    /* Loading States */
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(31, 78, 121, 0.3);
+        border-radius: 50%;
+        border-top-color: #1f4e79;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Better spacing for sections */
+    .section-spacing {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Improved form elements */
+    .stSelectbox > div > div {
+        border-radius: 0.5rem;
+    }
+    
+    .stTextInput > div > div > input {
+        border-radius: 0.5rem;
+    }
+    
+    .stTextArea > div > div > textarea {
+        border-radius: 0.5rem;
+    }
+    
+    /* Progress bar styling */
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, #1f4e79 0%, #4facfe 100%);
+    }
+    
+    /* Better divider */
+    hr {
+        margin: 2rem 0;
+        border: none;
+        border-top: 2px solid #e0e0e0;
+    }
+    
+    /* Improved info/warning/success messages */
+    .element-container .stAlert {
+        border-radius: 0.5rem;
+        padding: 1rem;
+    }
+    
+    /* Consistent button spacing */
+    .stButton {
+        margin: 0.5rem 0;
+    }
+    
+    /* Better code blocks */
+    .stCodeBlock {
+        border-radius: 0.5rem;
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
         .main-header {
             font-size: 1.5rem;
+        }
+        
+        .pipeline-container {
+            flex-direction: column;
         }
     }
     </style>

@@ -223,15 +223,35 @@ else:
             use_container_width=True
         )
     
-    # Preview transcript
+    # Preview transcript with better layout
     st.markdown("---")
-    st.subheader("📝 Transcript Preview")
-    st.text_area(
-        "Transcript:",
-        st.session_state.transcript_text,
-        height=300,
-        key="export_preview"
+    st.subheader("📝 Xem Trước Transcript")
+    
+    preview_mode = st.radio(
+        "Chế độ xem:",
+        ["Toàn bộ", "Rút gọn (500 ký tự đầu)"],
+        horizontal=True,
+        help="Chọn cách hiển thị transcript"
     )
+    
+    if preview_mode == "Rút gọn (500 ký tự đầu)":
+        preview_text = st.session_state.transcript_text[:500] + "..." if len(st.session_state.transcript_text) > 500 else st.session_state.transcript_text
+        st.text_area(
+            "Transcript (preview):",
+            preview_text,
+            height=200,
+            key="export_preview_short",
+            help=f"Hiển thị {min(500, len(st.session_state.transcript_text))} ký tự đầu. Tổng: {len(st.session_state.transcript_text)} ký tự"
+        )
+        st.caption(f"💡 Đang hiển thị {min(500, len(st.session_state.transcript_text))} ký tự đầu. Chọn 'Toàn bộ' để xem đầy đủ.")
+    else:
+        st.text_area(
+            "Transcript:",
+            st.session_state.transcript_text,
+            height=300,
+            key="export_preview_full",
+            help="Xem toàn bộ transcript trước khi export"
+        )
 
 # ===== Footer =====
 render_footer()

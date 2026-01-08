@@ -82,72 +82,96 @@ st.info(
 )
 
 # ================== MODEL SELECTION ==================
-st.subheader("🎯 Model Selection")
+st.subheader("🎯 Chọn Mô Hình")
 
 all_models = get_all_models()
 recommended = set(get_recommended_models())
 
-model_ids = list(all_models.keys())
+# Simplify: Only show recommended models by default, hide others in expander
+recommended_model_ids = [mid for mid in all_models.keys() if mid in recommended]
+other_model_ids = [mid for mid in all_models.keys() if mid not in recommended]
 
-selected_model_id = st.selectbox(
-    "ASR Model",
-    model_ids,
-    format_func=lambda mid: (
-        all_models[mid]["name"]
-        + (" 🌟" if mid in recommended else "")
-    ),
-    help="Chọn mô hình ASR: Whisper (đa ngôn ngữ, hỗ trợ tiếng Việt)"
-)
+if recommended_model_ids:
+    # Default to first recommended model
+    default_index = 0
+    selected_model_id = st.selectbox(
+        "Mô hình ASR (Khuyến nghị)",
+        recommended_model_ids,
+        index=default_index,
+        format_func=lambda mid: all_models[mid]["name"] + " 🌟",
+        help="Chọn mô hình ASR. Whisper là lựa chọn tốt nhất cho tiếng Việt."
+    )
+    
+    # Show other models in expander
+    if other_model_ids:
+        with st.expander("🔧 Mô hình khác (Không khuyến nghị)"):
+            other_selected = st.selectbox(
+                "Mô hình khác",
+                other_model_ids,
+                format_func=lambda mid: all_models[mid]["name"],
+                help="Các mô hình này có thể không tối ưu cho tiếng Việt"
+            )
+            if st.button("Sử dụng mô hình này", key="use_other_model"):
+                selected_model_id = other_selected
+                st.rerun()
+else:
+    # Fallback if no recommended models
+    model_ids = list(all_models.keys())
+    selected_model_id = st.selectbox(
+        "ASR Model",
+        model_ids,
+        format_func=lambda mid: all_models[mid]["name"],
+        help="Chọn mô hình ASR: Whisper (đa ngôn ngữ, hỗ trợ tiếng Việt)"
+    )
 
 model_info = get_model_info(selected_model_id)
 
 is_available, missing = check_model_dependencies(selected_model_id)
 
 if not is_available:
-    st.error(f"❌ Missing dependencies: {', '.join(missing)}")
+    st.error(f"❌ Thiếu dependencies: {', '.join(missing)}")
+    st.info("💡 **Gợi ý**: Cài đặt dependencies bằng lệnh: `pip install {' '.join(missing)}`")
 
 # ================== QUALITY PRESET ==================
-st.subheader("⚡ Quality Preset")
+st.subheader("⚡ Chọn Chất Lượng")
 
 # Get recommended preset (auto-suggest Accurate if GPU available)
 recommended_preset = get_recommended_preset(selected_model_id)
 has_gpu = detect_gpu()
 
 if has_gpu:
-    st.info("🎮 GPU detected! Recommend using 'Accurate' for best results.")
+    st.success("🎮 Đã phát hiện GPU! Khuyến nghị sử dụng 'Chính xác' để có kết quả tốt nhất.")
 
 preset_options = get_all_presets()
 preset_labels = {
-    "fast": "⚡ Fast - Nhanh, ít chính xác",
-    "balanced": "⚖️ Balanced - Cân bằng",
-    "accurate": "🎯 Accurate - Chậm, chính xác nhất"
+    "fast": "⚡ Nhanh - Xử lý nhanh, độ chính xác thấp hơn",
+    "balanced": "⚖️ Cân bằng - Tốc độ và độ chính xác cân bằng (Khuyến nghị)",
+    "accurate": "🎯 Chính xác - Xử lý chậm hơn, độ chính xác cao nhất"
 }
 
 selected_preset = st.radio(
-    "Chọn chất lượng",
+    "Chọn chất lượng xử lý:",
     preset_options,
-    index=preset_options.index(recommended_preset) if recommended_preset in preset_options else 0,
+    index=preset_options.index(recommended_preset) if recommended_preset in preset_options else 1,  # Default to balanced
     format_func=lambda p: preset_labels.get(p, p),
-    # Do not reference `selected_preset` here (NameError when evaluated). Show tooltip after selection.
-    help=get_preset_tooltip(recommended_preset) if recommended_preset in preset_options else ""
+    help="Chế độ 'Cân bằng' là lựa chọn tốt nhất cho hầu hết trường hợp"
 )
 
-# Show description and tooltip (tooltip depends on the actual selection)
-st.caption(get_preset_description(selected_preset))
-st.caption(get_preset_tooltip(selected_preset))
+# Show description
+st.info(f"💡 {get_preset_description(selected_preset)}")
 
 # Auto-map preset to model size (hidden from user)
 model_size = get_model_size_for_preset(selected_preset, selected_model_id)
 
 if model_size is None:
-    st.error(f"❌ Invalid preset/model combination")
+    st.error(f"❌ Kết hợp preset/model không hợp lệ")
     st.stop()
 
-# Show what model size will be used (optional, can be hidden)
-with st.expander("ℹ️ Technical Details"):
-    st.write(f"**Model size:** {model_size}")
+# Show technical details in expander (hidden by default)
+with st.expander("ℹ️ Chi tiết kỹ thuật", expanded=False):
+    st.write(f"**Kích thước model:** {model_size}")
     st.write(f"**Preset:** {selected_preset}")
-    st.caption("💡 Technical details moved to Advanced Settings page")
+    st.caption("💡 Thông tin kỹ thuật chi tiết có thể tìm thấy trong Advanced Settings")
 
 # Default options (hidden from regular users, moved to Advanced Settings)
 enable_chunk = True  # Always enabled for long audio
@@ -183,7 +207,8 @@ def run_chunked_transcription(run_fn):
     )
 
     results = []
-    progress = st.progress(0.0)
+    progress_bar = st.progress(0.0)
+    status_text = st.empty()
     error_count = 0
     temp_files_to_cleanup = []  # Track files to cleanup after transcription
 
@@ -313,7 +338,10 @@ def run_chunked_transcription(run_fn):
             if tmp_name and os.path.exists(tmp_name):
                 temp_files_to_cleanup.append(tmp_name)
 
-        progress.progress(i / len(ranges))
+        # Update progress with detailed status
+        progress_percent = i / len(ranges)
+        progress_bar.progress(progress_percent)
+        status_text.text(f"Đang xử lý đoạn {i}/{len(ranges)} ({progress_percent*100:.0f}%)...")
 
     # Cleanup all temp files after all transcriptions are complete
     for tmp_file in temp_files_to_cleanup:
@@ -326,9 +354,12 @@ def run_chunked_transcription(run_fn):
             # Ignore cleanup errors - file may already be deleted
             pass
 
+    # Clear status text
+    status_text.empty()
+    
     if error_count > 0 and len(results) == 0:
         # All chunks failed
-        raise Exception(f"All {error_count} chunks failed. Check audio file and model loading.")
+        raise Exception(f"Tất cả {error_count} đoạn xử lý đều thất bại. Vui lòng kiểm tra file audio và model.")
 
     return "\n".join(results) if results else ""
 
@@ -366,32 +397,54 @@ if st.button("🚀 Start Transcription", type="primary", use_container_width=Tru
 
         except Exception as e:
             error_msg = str(e)
-            st.error(f"❌ ASR failed: {error_msg}")
-            # Provide helpful context for common errors
-            if "NoneType" in error_msg or "None" in error_msg:
-                st.info("""
-                💡 **Lỗi NoneType thường do:**
-                - Audio file không thể load (kiểm tra format và path)
-                - Model không được load thành công
-                - FFmpeg không tìm thấy hoặc không hoạt động
-                
-                **Khắc phục:**
-                1. Kiểm tra audio file ở trang Audio Input
-                2. Xem lỗi ở trên để biết model có load thành công không
-                3. Kiểm tra FFmpeg setup
-                """)
-            elif "Failed to load audio" in error_msg or "load audio" in error_msg.lower():
-                st.info("""
-                💡 **Lỗi load audio thường do:**
-                - File format không được hỗ trợ
-                - File bị hỏng
-                - FFmpeg không tìm thấy
-                
-                **Khắc phục:**
-                1. Thử upload lại audio file
-                2. Kiểm tra format file (WAV, MP3, FLAC, M4A, OGG)
-                3. Kiểm tra FFmpeg setup
-                """)
+            st.error(f"❌ Transcription thất bại: {error_msg}")
+            
+            # Provide helpful context for common errors with better formatting
+            error_help = st.container()
+            with error_help:
+                if "NoneType" in error_msg or "None" in error_msg:
+                    st.warning("""
+                    **💡 Lỗi NoneType - Nguyên nhân thường gặp:**
+                    - Audio file không thể load (kiểm tra format và path)
+                    - Model không được load thành công
+                    - FFmpeg không tìm thấy hoặc không hoạt động
+                    
+                    **🔧 Cách khắc phục:**
+                    1. Quay lại trang Audio Input để kiểm tra audio file
+                    2. Xem lỗi ở trên để biết model có load thành công không
+                    3. Kiểm tra FFmpeg setup trong System Status
+                    """)
+                elif "Failed to load audio" in error_msg or "load audio" in error_msg.lower():
+                    st.warning("""
+                    **💡 Lỗi load audio - Nguyên nhân thường gặp:**
+                    - File format không được hỗ trợ
+                    - File bị hỏng hoặc không hợp lệ
+                    - FFmpeg không tìm thấy hoặc không hoạt động
+                    
+                    **🔧 Cách khắc phục:**
+                    1. Thử upload lại audio file ở trang Audio Input
+                    2. Kiểm tra format file (WAV, MP3, FLAC, M4A, OGG)
+                    3. Đảm bảo file không bị hỏng
+                    4. Kiểm tra FFmpeg setup
+                    """)
+                elif "memory" in error_msg.lower() or "out of memory" in error_msg.lower():
+                    st.warning("""
+                    **💡 Lỗi bộ nhớ - File audio quá lớn:**
+                    
+                    **🔧 Cách khắc phục:**
+                    1. Chia nhỏ file audio thành các đoạn ngắn hơn
+                    2. Sử dụng preset 'Nhanh' thay vì 'Chính xác'
+                    3. Giảm kích thước model (chọn 'tiny' hoặc 'base')
+                    """)
+                elif "cuda" in error_msg.lower() or "gpu" in error_msg.lower():
+                    st.info("""
+                    **💡 Lỗi GPU - Hệ thống sẽ tự động chuyển sang CPU:**
+                    - Nếu có GPU, kiểm tra CUDA installation
+                    - Nếu không có GPU, hệ thống sẽ sử dụng CPU (chậm hơn)
+                    """)
+                else:
+                    with st.expander("🔍 Chi tiết lỗi"):
+                        st.exception(e)
 
 # ================== OUTPUT ==================
 if st.session_state.transcript_text:

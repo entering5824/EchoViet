@@ -60,21 +60,43 @@ with tab_upload:
     uploaded_file = st.file_uploader(
         "Audio file (wav, mp3, flac, m4a, ogg)",
         type=["wav", "mp3", "flac", "m4a", "ogg"],
+        help="Tải lên file audio để bắt đầu. Hỗ trợ các định dạng: WAV, MP3, FLAC, M4A, OGG"
     )
 
     if uploaded_file:
-        with st.spinner("Loading audio..."):
-            audio_data, sr = load_audio(uploaded_file)
-
-        if audio_data is None:
-            st.error("❌ Không thể load audio")
+        # Validation: Check file size (max 200MB)
+        max_size_mb = 200
+        file_size_mb = uploaded_file.size / (1024 * 1024)
+        
+        if file_size_mb > max_size_mb:
+            st.error(f"❌ File quá lớn ({file_size_mb:.1f}MB). Kích thước tối đa: {max_size_mb}MB")
+            st.info("💡 **Gợi ý**: Hãy nén file hoặc chia nhỏ file audio")
         else:
-            st.session_state.audio_data = audio_data
-            st.session_state.audio_sr = sr
-            st.session_state.audio_info = get_audio_info(audio_data, sr)
-            st.session_state.audio_ready = False
-            st.session_state.audio_source = uploaded_file
-            st.success("✅ Audio loaded")
+            with st.spinner("⏳ Đang tải audio..."):
+                try:
+                    audio_data, sr = load_audio(uploaded_file)
+                    
+                    if audio_data is None:
+                        st.error("❌ Không thể load audio. Vui lòng kiểm tra file có hợp lệ không.")
+                        st.info("💡 **Gợi ý**: \n- Đảm bảo file không bị hỏng\n- Thử chuyển đổi sang định dạng WAV\n- Kiểm tra file có phải là audio không")
+                    else:
+                        # Additional validation: Check duration
+                        duration = len(audio_data) / sr
+                        if duration < 0.1:
+                            st.warning("⚠️ File audio quá ngắn (< 0.1 giây). Có thể không phải file audio hợp lệ.")
+                        elif duration > 3600:  # 1 hour
+                            st.warning(f"⚠️ File audio rất dài ({duration/60:.1f} phút). Quá trình xử lý có thể mất nhiều thời gian.")
+                        
+                        st.session_state.audio_data = audio_data
+                        st.session_state.audio_sr = sr
+                        st.session_state.audio_info = get_audio_info(audio_data, sr)
+                        st.session_state.audio_ready = False
+                        st.session_state.audio_source = uploaded_file
+                        st.success(f"✅ Đã tải audio thành công! ({file_size_mb:.1f}MB, {duration:.1f}s)")
+                        
+                except Exception as e:
+                    st.error(f"❌ Lỗi khi tải audio: {str(e)}")
+                    st.info("💡 **Gợi ý**: \n- Kiểm tra file có bị hỏng không\n- Thử file audio khác\n- Đảm bảo định dạng được hỗ trợ")
 
 with tab_record:
     st.info("Ghi âm trực tiếp từ trình duyệt (tùy chọn)")
@@ -135,80 +157,37 @@ if st.session_state.audio_data is not None:
     st.divider()
     st.subheader("🔧 Tiền Xử Lý Âm Thanh")
     
-    st.markdown("""
-    <div style='background-color: #f0f2f6; padding: 15px; border-radius: 5px; margin-bottom: 20px;'>
-        <strong>💡 Hướng dẫn:</strong> Chọn chế độ phù hợp với nhu cầu của bạn. 
-        <strong>Đề xuất</strong> là lựa chọn tốt nhất cho hầu hết trường hợp.
-    </div>
-    """, unsafe_allow_html=True)
+    # Default to recommended mode
+    if st.session_state.preprocess_mode not in ["simple", "recommended", "advanced"]:
+        st.session_state.preprocess_mode = "recommended"
     
-    # Preset Mode Selection
-    mode_options = {
-        "simple": {
-            "name": "🎯 Đơn giản",
-            "description": "Tự động xử lý với cài đặt mặc định - Phù hợp cho người dùng không chuyên",
-            "icon": "🎯"
-        },
-        "recommended": {
-            "name": "⭐ Đề xuất (Khuyến nghị)",
-            "description": "Cài đặt tối ưu cho chất lượng và tốc độ - Phù hợp cho hầu hết người dùng",
-            "icon": "⭐"
-        },
-        "advanced": {
-            "name": "⚙️ Nâng cao",
-            "description": "Tùy chỉnh chi tiết các thông số - Dành cho người dùng có kinh nghiệm",
-            "icon": "⚙️"
+    # Simplified mode selection - default to recommended, hide advanced by default
+    use_advanced = st.checkbox(
+        "⚙️ Hiển thị tùy chọn nâng cao",
+        value=False,
+        help="Bật để xem và tùy chỉnh các thông số kỹ thuật chi tiết"
+    )
+    
+    if use_advanced:
+        # Show mode selection only if advanced is enabled
+        mode_options = {
+            "simple": "🎯 Đơn giản - Tự động xử lý với cài đặt mặc định",
+            "recommended": "⭐ Đề xuất - Cài đặt tối ưu (Khuyến nghị)",
+            "advanced": "⚙️ Nâng cao - Tùy chỉnh chi tiết"
         }
-    }
-    
-    # Display preset selection with better UI
-    preset_cols = st.columns(3)
-    selected_mode = st.session_state.preprocess_mode
-    
-    with preset_cols[0]:
-        if st.button(
-            mode_options["simple"]["name"],
-            use_container_width=True,
-            type="primary" if selected_mode == "simple" else "secondary",
-            key="preset_simple"
-        ):
-            selected_mode = "simple"
-            st.session_state.preprocess_mode = "simple"
-            st.session_state.preprocess_normalize = True
-            st.session_state.preprocess_trim_silence = False
-            st.session_state.preprocess_remove_noise = False
-            st.session_state.preprocess_target_sr = 16000
-            st.rerun()
-    
-    with preset_cols[1]:
-        if st.button(
-            mode_options["recommended"]["name"],
-            use_container_width=True,
-            type="primary" if selected_mode == "recommended" else "secondary",
-            key="preset_recommended"
-        ):
-            selected_mode = "recommended"
-            st.session_state.preprocess_mode = "recommended"
-            st.session_state.preprocess_normalize = True
-            st.session_state.preprocess_trim_silence = False
-            st.session_state.preprocess_remove_noise = False
-            st.session_state.preprocess_target_sr = 16000
-            st.rerun()
-    
-    with preset_cols[2]:
-        if st.button(
-            mode_options["advanced"]["name"],
-            use_container_width=True,
-            type="primary" if selected_mode == "advanced" else "secondary",
-            key="preset_advanced"
-        ):
-            selected_mode = "advanced"
-            st.session_state.preprocess_mode = "advanced"
-            st.rerun()
-    
-    # Show description of selected preset
-    current_preset = mode_options[st.session_state.preprocess_mode]
-    st.info(f"**{current_preset['name']}**: {current_preset['description']}")
+        
+        selected_mode = st.radio(
+            "Chọn chế độ xử lý:",
+            options=list(mode_options.keys()),
+            format_func=lambda x: mode_options[x],
+            index=list(mode_options.keys()).index(st.session_state.preprocess_mode),
+            help="Chế độ 'Đề xuất' là lựa chọn tốt nhất cho hầu hết trường hợp"
+        )
+        st.session_state.preprocess_mode = selected_mode
+    else:
+        # Default to recommended mode
+        st.session_state.preprocess_mode = "recommended"
+        st.info("💡 **Chế độ Đề xuất**: Sử dụng cài đặt tối ưu cho chất lượng và tốc độ. Bật 'Tùy chọn nâng cao' để tùy chỉnh.")
     
     # Configuration based on preset mode
     st.markdown("### ⚙️ Cài Đặt")
@@ -217,26 +196,17 @@ if st.session_state.audio_data is not None:
         # Simple mode: Show minimal, user-friendly options
         st.markdown("""
         **Chế độ Đơn giản** sẽ tự động:
-        - ✅ Chuẩn hóa âm lượng (normalize) để âm thanh rõ ràng hơn
+        - ✅ Chuẩn hóa âm lượng để âm thanh rõ ràng hơn
         - ✅ Giữ nguyên sample rate 16kHz (tối ưu cho nhận diện giọng nói)
         - ❌ Không cắt im lặng (giữ nguyên thời lượng)
         - ❌ Không lọc nhiễu (giữ nguyên chất lượng gốc)
         """)
         
-        # Just show what will be applied
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown("**Chuẩn hóa âm lượng:** ✅ Bật")
-        with col2:
-            st.markdown("**Sample Rate:** 16kHz")
-        with col3:
-            st.markdown("**Cắt im lặng:** ❌ Tắt")
-        
         # Use saved values
-        normalize = st.session_state.preprocess_normalize
-        trim_silence = st.session_state.preprocess_trim_silence
-        remove_noise = st.session_state.preprocess_remove_noise
-        target_sr = st.session_state.preprocess_target_sr
+        normalize = True
+        trim_silence = False
+        remove_noise = False
+        target_sr = 16000
         
     elif st.session_state.preprocess_mode == "recommended":
         # Recommended mode: Show recommended settings with explanations
@@ -330,6 +300,22 @@ if st.session_state.audio_data is not None:
                 st.session_state.preprocess_noise_cutoff = noise_cutoff
                 st.caption("⚠️ Lưu ý: Lọc quá mạnh có thể làm giảm chất lượng giọng nói. Chỉ điều chỉnh khi cần thiết.")
     
+    # Preview before processing
+    st.markdown("---")
+    st.markdown("### 👁️ Xem trước")
+    
+    preview_col1, preview_col2 = st.columns(2)
+    with preview_col1:
+        st.markdown("**Trước khi xử lý:**")
+        if isinstance(st.session_state.audio_source, bytes):
+            st.audio(st.session_state.audio_source, format="audio/wav")
+        else:
+            st.audio(st.session_state.audio_source)
+    
+    with preview_col2:
+        st.markdown("**Sau khi xử lý:**")
+        st.info("Audio đã xử lý sẽ hiển thị ở đây sau khi bạn nhấn 'Áp dụng'")
+    
     # Apply preprocessing button
     st.divider()
     col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
@@ -393,9 +379,21 @@ if st.session_state.audio_data is not None:
                     if applied_settings:
                         st.info("**Đã áp dụng:** " + " | ".join(applied_settings))
                     
+                    # Show preview of processed audio
+                    st.audio(audio, sample_rate=st.session_state.audio_sr)
+                    
                 except Exception as e:
-                    st.error(f"❌ Lỗi khi xử lý audio: {str(e)}")
-                    st.exception(e)
+                    error_msg = str(e)
+                    st.error(f"❌ Lỗi khi xử lý audio: {error_msg}")
+                    
+                    # Provide helpful suggestions
+                    if "memory" in error_msg.lower() or "out of memory" in error_msg.lower():
+                        st.info("💡 **Gợi ý**: File audio quá lớn. Hãy thử:\n- Chia nhỏ file audio\n- Sử dụng chế độ 'Đơn giản'\n- Giảm sample rate")
+                    elif "format" in error_msg.lower() or "codec" in error_msg.lower():
+                        st.info("💡 **Gợi ý**: Định dạng file không được hỗ trợ. Hãy thử:\n- Chuyển đổi sang WAV hoặc MP3\n- Kiểm tra file có bị hỏng không")
+                    else:
+                        with st.expander("🔍 Chi tiết lỗi"):
+                            st.exception(e)
 
     # ================== NEXT STEP ==================
     st.divider()

@@ -99,36 +99,109 @@ with tab_upload:
                     st.info("💡 **Gợi ý**: \n- Kiểm tra file có bị hỏng không\n- Thử file audio khác\n- Đảm bảo định dạng được hỗ trợ")
 
 with tab_record:
-    st.info("Ghi âm trực tiếp từ trình duyệt (tùy chọn)")
-
+    st.info("🎙️ Ghi âm trực tiếp từ trình duyệt. Nhấn nút để bắt đầu/dừng ghi âm.")
+    
+    # Initialize recorded audio in session state
+    if "recorded_audio_bytes" not in st.session_state:
+        st.session_state.recorded_audio_bytes = None
+    if "recorded_audio_hash" not in st.session_state:
+        st.session_state.recorded_audio_hash = None
+    
     try:
         from audio_recorder_streamlit import audio_recorder
+        import hashlib
 
-        audio_bytes = audio_recorder()
+        # Show recorder
+        audio_bytes = audio_recorder(
+            text="",
+            recording_color="#e74c3c",
+            neutral_color="#6c757d",
+            icon_name="microphone",
+            icon_size="2x",
+        )
 
-        if audio_bytes:
-            st.audio(audio_bytes, format="audio/wav")
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-                tmp.write(audio_bytes)
-                tmp_path = tmp.name
-
-            try:
-                audio_data, sr = load_audio(tmp_path)
-                if audio_data is not None:
-                    st.session_state.audio_data = audio_data
-                    st.session_state.audio_sr = sr
-                    st.session_state.audio_info = get_audio_info(audio_data, sr)
-                    st.session_state.audio_ready = False
-                    st.session_state.audio_source = audio_bytes
-                    st.success("✅ Audio recorded")
-            finally:
-                try:
-                    os.unlink(tmp_path)
-                except Exception:
-                    pass
+        # Check if new audio was recorded (different from stored)
+        if audio_bytes is not None:
+            # Create hash to check if audio is new
+            audio_hash = hashlib.md5(audio_bytes).hexdigest()
+            
+            # Check if this is new audio (different hash from what we have)
+            if st.session_state.recorded_audio_hash != audio_hash:
+                st.session_state.recorded_audio_bytes = audio_bytes
+                st.session_state.recorded_audio_hash = audio_hash
+                
+                # Process the new audio
+                with st.spinner("⏳ Đang xử lý audio đã ghi..."):
+                    try:
+                        # Create temp file for audio bytes
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+                            tmp.write(audio_bytes)
+                            tmp_path = tmp.name
+                        
+                        try:
+                            # Load audio using load_audio function
+                            audio_data, sr = load_audio(tmp_path)
+                            
+                            if audio_data is not None and len(audio_data) > 0:
+                                # Calculate duration
+                                duration = len(audio_data) / sr
+                                
+                                # Validate duration
+                                if duration < 0.1:
+                                    st.warning("⚠️ Audio quá ngắn (< 0.1 giây). Vui lòng ghi âm lại.")
+                                else:
+                                    # Save to session state
+                                    st.session_state.audio_data = audio_data
+                                    st.session_state.audio_sr = sr
+                                    st.session_state.audio_info = get_audio_info(audio_data, sr)
+                                    st.session_state.audio_ready = False
+                                    st.session_state.audio_source = audio_bytes
+                                    
+                                    st.success(f"✅ Đã ghi âm thành công! ({duration:.1f}s)")
+                                    
+                                    # Show audio player
+                                    st.audio(audio_bytes, format="audio/wav")
+                            else:
+                                st.error("❌ Không thể load audio đã ghi. Vui lòng thử lại.")
+                        finally:
+                            # Clean up temp file
+                            try:
+                                if os.path.exists(tmp_path):
+                                    os.unlink(tmp_path)
+                            except Exception:
+                                pass
+                    except Exception as e:
+                        st.error(f"❌ Lỗi khi xử lý audio đã ghi: {str(e)}")
+                        st.info("💡 **Gợi ý**: \n- Đảm bảo microphone hoạt động\n- Kiểm tra quyền truy cập microphone\n- Thử ghi âm lại")
+                        with st.expander("🔍 Chi tiết lỗi"):
+                            st.exception(e)
+        
+        # Show previously recorded audio if available
+        elif st.session_state.recorded_audio_bytes is not None:
+            st.info("📼 Audio đã ghi trước đó:")
+            st.audio(st.session_state.recorded_audio_bytes, format="audio/wav")
+            
+            # Option to clear recorded audio
+            if st.button("🗑️ Xóa audio đã ghi", key="clear_recorded_audio"):
+                st.session_state.recorded_audio_bytes = None
+                st.session_state.audio_data = None
+                st.session_state.audio_sr = None
+                st.session_state.audio_info = None
+                st.session_state.audio_source = None
+                st.success("✅ Đã xóa audio đã ghi")
+                st.rerun()
+        
+        # Show current audio status if loaded
+        if st.session_state.audio_data is not None and st.session_state.recorded_audio_bytes is not None:
+            duration = st.session_state.audio_info.get('duration', 0) if st.session_state.audio_info else 0
+            st.info(f"✅ Audio đã sẵn sàng ({duration:.1f}s). Bạn có thể tiếp tục với tiền xử lý hoặc transcription.")
+            
     except ImportError:
-        st.warning("Cài đặt audio-recorder-streamlit để dùng chức năng ghi âm")
+        st.warning("⚠️ Chưa cài đặt `audio-recorder-streamlit`. Cài đặt bằng lệnh: `pip install audio-recorder-streamlit`")
+        st.info("💡 Sau khi cài đặt, làm mới trang để sử dụng tính năng ghi âm.")
+    except Exception as e:
+        st.error(f"❌ Lỗi khi khởi tạo audio recorder: {str(e)}")
+        st.info("💡 **Gợi ý**: \n- Kiểm tra quyền truy cập microphone\n- Đảm bảo trình duyệt hỗ trợ Web Audio API\n- Thử trên trình duyệt khác (Chrome, Edge)")
 
 # ================== OVERVIEW ==================
 if st.session_state.audio_data is not None:

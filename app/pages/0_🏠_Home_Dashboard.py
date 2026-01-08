@@ -1,6 +1,6 @@
 """
 Home / Dashboard Page
-Trang chính – overview & navigation với workflow guide rõ ràng
+Main page – overview & navigation with clear workflow guide
 """
 import streamlit as st
 import os
@@ -25,15 +25,15 @@ apply_custom_css()
 # ===== Header =====
 render_page_header(
     "Vietnamese Speech to Text",
-    "Hệ thống chuyển đổi giọng nói tiếng Việt thành văn bản – tối ưu cho họp & ghi chép",
+    "Vietnamese speech-to-text conversion system – optimized for meetings & note-taking",
     "🎤",
     show_logo=True
 )
 
 # ===== Quick Start Guide =====
-st.markdown("### 🚀 Hướng dẫn nhanh")
+st.markdown("### 🚀 Quick Start Guide")
 st.markdown("""
-Chỉ cần **3 bước đơn giản** để chuyển đổi audio thành văn bản:
+Just **3 simple steps** to convert audio to text:
 """)
 
 # Workflow steps with progress indicator
@@ -55,7 +55,7 @@ workflow_steps = [
     {
         "number": 1,
         "title": "Upload Audio",
-        "description": "Tải lên file audio (WAV, MP3, FLAC, M4A, OGG)",
+        "description": "Upload audio file (WAV, MP3, FLAC, M4A, OGG)",
         "page": "pages/1_🎤_Audio_Input.py",
         "icon": "🎤",
         "completed": workflow_progress >= 1
@@ -63,7 +63,7 @@ workflow_steps = [
     {
         "number": 2,
         "title": "Transcription",
-        "description": "Chuyển đổi giọng nói thành văn bản",
+        "description": "Convert speech to text",
         "page": "pages/2_📝_Transcription.py",
         "icon": "📝",
         "completed": workflow_progress >= 2
@@ -71,7 +71,7 @@ workflow_steps = [
     {
         "number": 3,
         "title": "Enhancement & Export",
-        "description": "Cải thiện văn bản và xuất file",
+        "description": "Enhance text and export file",
         "page": "pages/3_✨_Speaker_Enhancement.py",
         "icon": "✨",
         "completed": workflow_progress >= 3
@@ -96,7 +96,7 @@ for i, step in enumerate(workflow_steps):
         ">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">{step['icon']}</div>
             <div style="font-size: 1.2rem; font-weight: bold; color: #1f4e79; margin-bottom: 0.5rem;">
-                {status_icon} Bước {step['number']}: {step['title']}
+                {status_icon} Step {step['number']}: {step['title']}
             </div>
             <div style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
                 {step['description']}
@@ -104,45 +104,45 @@ for i, step in enumerate(workflow_steps):
         </div>
         """, unsafe_allow_html=True)
         
-        if st.button(f"Bắt đầu bước {step['number']}", key=f"workflow_btn_{i}", use_container_width=True):
+        if st.button(f"Start Step {step['number']}", key=f"workflow_btn_{i}", use_container_width=True):
             st.switch_page(step['page'])
 
 # Progress bar
 st.progress(workflow_progress / len(workflow_steps))
-st.caption(f"Tiến độ: {workflow_progress}/{len(workflow_steps)} bước đã hoàn thành")
+st.caption(f"Progress: {workflow_progress}/{len(workflow_steps)} steps completed")
 
 # ===== Main Content =====
 st.divider()
-st.markdown("### 📌 Tổng quan")
+st.markdown("### 📌 Overview")
 
 st.markdown("""
-Hệ thống hỗ trợ **chuyển đổi audio tiếng Việt → văn bản** với độ chính xác cao,
-tập trung vào **cuộc họp, phỏng vấn và ghi chú dài**.
+The system supports **Vietnamese audio → text conversion** with high accuracy,
+focused on **meetings, interviews, and long notes**.
 """)
 
 # Pipeline Diagram
-st.markdown("#### 🔄 Quy trình xử lý")
+st.markdown("#### 🔄 Processing Pipeline")
 render_pipeline_diagram()
 
 # Features in a cleaner layout
-st.markdown("#### ✨ Tính năng nổi bật")
+st.markdown("#### ✨ Key Features")
 col_feat1, col_feat2 = st.columns(2)
 
 with col_feat1:
     st.markdown("""
-    - 🎤 **Nhận diện giọng nói** tiếng Việt (Whisper)
-    - 👥 **Phân biệt người nói** (Speaker Diarization)
+    - 🎤 **Vietnamese speech recognition** (Whisper)
+    - 👥 **Speaker diarization** (Speaker identification)
     """)
 
 with col_feat2:
     st.markdown("""
-    - ✨ **AI Text Enhancement** (dấu câu, viết hoa, làm sạch)
-    - 📤 **Xuất đa định dạng** (TXT / DOCX / PDF / JSON)
+    - ✨ **AI Text Enhancement** (punctuation, capitalization, cleaning)
+    - 📤 **Multi-format export** (TXT / DOCX / PDF / JSON)
     """)
 
 # ===== Quick Navigation =====
 st.divider()
-st.markdown("### 🔗 Điều hướng nhanh")
+st.markdown("### 🔗 Quick Navigation")
 
 nav_cols = st.columns(4)
 nav_buttons = [
@@ -166,24 +166,24 @@ st.divider()
 col_help1, col_help2 = st.columns(2)
 
 with col_help1:
-    with st.expander("💡 Tips sử dụng", expanded=False):
+    with st.expander("💡 Usage Tips", expanded=False):
         st.markdown("""
-        - ✅ Ưu tiên audio **ít nhiễu**, rõ giọng
-        - ✅ File dài sẽ được **tự động chia đoạn**
-        - ✅ Speaker diarization hiệu quả nhất với **2–4 người nói**
-        - ✅ Sử dụng chế độ "Đề xuất" cho kết quả tốt nhất
+        - ✅ Prefer audio with **low noise**, clear voice
+        - ✅ Long files will be **automatically chunked**
+        - ✅ Speaker diarization works best with **2–4 speakers**
+        - ✅ Use "Recommended" mode for best results
         """)
 
 with col_help2:
-    with st.expander("🔒 Quyền riêng tư & bảo mật", expanded=False):
+    with st.expander("🔒 Privacy & Security", expanded=False):
         st.markdown("""
-        - 🔐 Audio xử lý trên server, **không chia sẻ bên thứ ba**
-        - 🗑️ File tạm được **tự động xóa** sau khi xử lý
-        - 📝 Không lưu audio / transcript nếu không export
+        - 🔐 Audio processed on server, **not shared with third parties**
+        - 🗑️ Temporary files are **automatically deleted** after processing
+        - 📝 Audio / transcript not saved unless exported
         """)
 
 # Advanced section (collapsed by default)
-with st.expander("⚙️ Cài đặt nâng cao (Dành cho người dùng kỹ thuật)", expanded=False):
+with st.expander("⚙️ Advanced Settings (For technical users)", expanded=False):
     adv_cols = st.columns(3)
     with adv_cols[0]:
         if st.button("⚙️ Advanced Settings", use_container_width=True):

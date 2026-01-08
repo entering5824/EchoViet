@@ -1,11 +1,11 @@
 """
 Footer Component
-Hiển thị thông tin students và instructor
+Display information about students and instructor
 """
 import streamlit as st
 
 def render_footer():
-    """Render footer với thông tin students và instructor"""
+    """Render footer with information about students and instructor"""
     st.write("---")
     
     # --- GITHUB & STUDENTS BOX ---

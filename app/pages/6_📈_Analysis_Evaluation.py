@@ -1,7 +1,7 @@
 """
 Analysis & Evaluation Page
-Thống kê, so sánh model, và đánh giá WER/CER
-Trang học thuật cho academic evaluation
+Statistics, model comparison, and WER/CER evaluation
+Academic page for academic evaluation
 """
 import streamlit as st
 import os
@@ -24,7 +24,7 @@ st.set_page_config(
     layout="wide"
 )
 
-render_page_header("Analysis & Evaluation", "Thống kê chi tiết, so sánh model, và đánh giá hiệu suất", "📈")
+render_page_header("Analysis & Evaluation", "Detailed statistics, model comparison, and performance evaluation", "📈")
 
 # Initialize session state
 for key, default in (
@@ -38,7 +38,7 @@ for key, default in (
 
 # Check if transcript is available
 if not st.session_state.transcript_text:
-    st.warning("⚠️ Vui lòng chạy transcription trước tại trang 'Transcription'")
+    st.warning("⚠️ Please run transcription first at 'Transcription' page")
     if st.button("📝 Go to Transcription", type="primary"):
         st.switch_page("pages/2_📝_Transcription.py")
     st.stop()

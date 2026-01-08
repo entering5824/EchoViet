@@ -65,6 +65,9 @@ def fix_broken_sentences(text: str) -> str:
     if not text:
         return ""
     
+    # Initialize corrected with input text
+    corrected = text
+    
     # Fix patterns like "chia. Sẻ" → "chia sẻ"
     # Remove period before capitalized word if it's part of a compound word
     corrected = re.sub(r'([a-zàáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ])\.\s+([A-ZÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴĐ][a-zàáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]+)', r'\1 \2', corrected)

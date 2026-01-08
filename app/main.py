@@ -1,5 +1,4 @@
 """
-Hệ thống Chuyển Giọng Nói Tiếng Việt Sang Văn Bản
 Vietnamese Speech to Text System for Automatic Meeting Transcription
 Home Page
 """
@@ -9,15 +8,15 @@ import sys
 import streamlit as st
 
 # =========================
-# 1️⃣ CONFIG FFmpeg (BẮT BUỘC TRƯỚC WHISPER)
+# 1️⃣ CONFIG FFmpeg (REQUIRED BEFORE WHISPER)
 # =========================
-# Thêm parent directory vào path để import core modules
+# Add parent directory to path to import core modules
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.abspath(os.path.join(BASE_DIR, '..')))
 
-# Setup FFmpeg tự động từ imageio-ffmpeg
+# Setup FFmpeg automatically from imageio-ffmpeg
 from core.audio.ffmpeg_setup import ensure_ffmpeg
-ensure_ffmpeg(silent=False)  # Hiển thị thông báo nếu có lỗi
+ensure_ffmpeg(silent=False)  # Show message if there's an error
 
 # =========================
 # 2️⃣ STREAMLIT CONFIG (PHẢI ĐỨNG SỚM)
@@ -52,14 +51,14 @@ def render_home():
 
     st.markdown(
         """
-### 📋 Giới thiệu
+### 📋 Introduction
 
-Hệ thống này cho phép bạn chuyển đổi giọng nói tiếng Việt thành văn bản một cách tự động và chính xác.
+This system allows you to convert Vietnamese speech to text automatically and accurately.
 
-### 🚀 Bắt đầu
-Sử dụng sidebar để điều hướng các chức năng hoặc truy cập **Home Dashboard** để xem tổng quan.
+### 🚀 Get Started
+Use the sidebar to navigate functions or access **Home Dashboard** to see an overview.
 
-### 🔧 Công nghệ
+### 🔧 Technology
 - Whisper
 - Librosa, PyDub
 - Streamlit

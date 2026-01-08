@@ -1,7 +1,7 @@
 """
 API / System Info Page
-API endpoints demo, system information, và integration examples
-Thể hiện khả năng mở rộng và deployment readiness
+API endpoints demo, system information, and integration examples
+Demonstrates scalability and deployment readiness
 """
 import streamlit as st
 import os
@@ -25,7 +25,7 @@ st.set_page_config(
     layout="wide"
 )
 
-render_page_header("API / System Information", "API endpoints, system info, và integration examples", "🔌")
+render_page_header("API / System Information", "API endpoints, system info, and integration examples", "🔌")
 
 # Tabs
 tab1, tab2, tab3 = st.tabs(["🔌 API Endpoints", "💻 System Info", "📚 Integration Examples"])
@@ -33,14 +33,14 @@ tab1, tab2, tab3 = st.tabs(["🔌 API Endpoints", "💻 System Info", "📚 Inte
 # ===== TAB 1: API Endpoints =====
 with tab1:
     st.subheader("🔌 API Endpoints (Demo)")
-    st.caption("API endpoints cho integration và deployment")
+    st.caption("API endpoints for integration and deployment")
     
     # API Overview
     st.markdown("""
     ### API Overview
     
-    Hệ thống hỗ trợ RESTful API để tích hợp vào các ứng dụng khác.
-    API endpoints sử dụng FastAPI framework.
+    The system supports RESTful API to integrate into other applications.
+    API endpoints use FastAPI framework.
     """)
     
     # Endpoint: Transcribe

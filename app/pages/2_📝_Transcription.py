@@ -1,6 +1,6 @@
 """
 Transcription Page
-Chạy ASR với Whisper, chunking nhẹ, tối ưu cho Streamlit Cloud
+Run ASR with Whisper, light chunking, optimized for Streamlit Cloud
 """
 import streamlit as st
 import os
@@ -67,11 +67,11 @@ def init_state():
 init_state()
 
 # ================== HEADER ==================
-render_page_header("Transcription", "Chạy ASR với Whisper, hỗ trợ audio dài", "📝")
+render_page_header("Transcription", "Run ASR with Whisper, supports long audio", "📝")
 
 # ================== GUARD ==================
 if st.session_state.audio_data is None:
-    st.warning("⚠️ Chưa có audio. Vui lòng upload ở trang Audio Input.")
+    st.warning("⚠️ No audio available. Please upload at Audio Input page.")
     if st.button("🎤 Go to Audio Input", type="primary"):
         st.switch_page("pages/1_🎤_Audio_Input.py")
     st.stop()
@@ -82,7 +82,7 @@ st.info(
 )
 
 # ================== MODEL SELECTION ==================
-st.subheader("🎯 Chọn Mô Hình")
+st.subheader("🎯 Select Model")
 
 all_models = get_all_models()
 recommended = set(get_recommended_models())
@@ -95,23 +95,23 @@ if recommended_model_ids:
     # Default to first recommended model
     default_index = 0
     selected_model_id = st.selectbox(
-        "Mô hình ASR (Khuyến nghị)",
+        "ASR Model (Recommended)",
         recommended_model_ids,
         index=default_index,
         format_func=lambda mid: all_models[mid]["name"] + " 🌟",
-        help="Chọn mô hình ASR. Whisper là lựa chọn tốt nhất cho tiếng Việt."
+        help="Select ASR model. Whisper is the best choice for Vietnamese."
     )
     
     # Show other models in expander
     if other_model_ids:
-        with st.expander("🔧 Mô hình khác (Không khuyến nghị)"):
+        with st.expander("🔧 Other Models (Not Recommended)"):
             other_selected = st.selectbox(
-                "Mô hình khác",
+                "Other models",
                 other_model_ids,
                 format_func=lambda mid: all_models[mid]["name"],
-                help="Các mô hình này có thể không tối ưu cho tiếng Việt"
+                help="These models may not be optimal for Vietnamese"
             )
-            if st.button("Sử dụng mô hình này", key="use_other_model"):
+            if st.button("Use this model", key="use_other_model"):
                 selected_model_id = other_selected
                 st.rerun()
 else:
@@ -121,7 +121,7 @@ else:
         "ASR Model",
         model_ids,
         format_func=lambda mid: all_models[mid]["name"],
-        help="Chọn mô hình ASR: Whisper (đa ngôn ngữ, hỗ trợ tiếng Việt)"
+        help="Select ASR model: Whisper (multilingual, supports Vietnamese)"
     )
 
 model_info = get_model_info(selected_model_id)
@@ -129,32 +129,32 @@ model_info = get_model_info(selected_model_id)
 is_available, missing = check_model_dependencies(selected_model_id)
 
 if not is_available:
-    st.error(f"❌ Thiếu dependencies: {', '.join(missing)}")
-    st.info("💡 **Gợi ý**: Cài đặt dependencies bằng lệnh: `pip install {' '.join(missing)}`")
+    st.error(f"❌ Missing dependencies: {', '.join(missing)}")
+    st.info("💡 **Suggestion**: Install dependencies with: `pip install {' '.join(missing)}`")
 
 # ================== QUALITY PRESET ==================
-st.subheader("⚡ Chọn Chất Lượng")
+st.subheader("⚡ Select Quality")
 
 # Get recommended preset (auto-suggest Accurate if GPU available)
 recommended_preset = get_recommended_preset(selected_model_id)
 has_gpu = detect_gpu()
 
 if has_gpu:
-    st.success("🎮 Đã phát hiện GPU! Khuyến nghị sử dụng 'Chính xác' để có kết quả tốt nhất.")
+    st.success("🎮 GPU detected! Recommended to use 'Accurate' for best results.")
 
 preset_options = get_all_presets()
 preset_labels = {
-    "fast": "⚡ Nhanh - Xử lý nhanh, độ chính xác thấp hơn",
-    "balanced": "⚖️ Cân bằng - Tốc độ và độ chính xác cân bằng (Khuyến nghị)",
-    "accurate": "🎯 Chính xác - Xử lý chậm hơn, độ chính xác cao nhất"
+    "fast": "⚡ Fast - Fast processing, lower accuracy",
+    "balanced": "⚖️ Balanced - Balanced speed and accuracy (Recommended)",
+    "accurate": "🎯 Accurate - Slower processing, highest accuracy"
 }
 
 selected_preset = st.radio(
-    "Chọn chất lượng xử lý:",
+    "Select processing quality:",
     preset_options,
     index=preset_options.index(recommended_preset) if recommended_preset in preset_options else 1,  # Default to balanced
     format_func=lambda p: preset_labels.get(p, p),
-    help="Chế độ 'Cân bằng' là lựa chọn tốt nhất cho hầu hết trường hợp"
+    help="'Balanced' mode is the best choice for most cases"
 )
 
 # Show description
@@ -164,14 +164,14 @@ st.info(f"💡 {get_preset_description(selected_preset)}")
 model_size = get_model_size_for_preset(selected_preset, selected_model_id)
 
 if model_size is None:
-    st.error(f"❌ Kết hợp preset/model không hợp lệ")
+    st.error(f"❌ Invalid preset/model combination")
     st.stop()
 
 # Show technical details in expander (hidden by default)
-with st.expander("ℹ️ Chi tiết kỹ thuật", expanded=False):
-    st.write(f"**Kích thước model:** {model_size}")
+with st.expander("ℹ️ Technical Details", expanded=False):
+    st.write(f"**Model size:** {model_size}")
     st.write(f"**Preset:** {selected_preset}")
-    st.caption("💡 Thông tin kỹ thuật chi tiết có thể tìm thấy trong Advanced Settings")
+    st.caption("💡 Detailed technical information can be found in Advanced Settings")
 
 # Default options (hidden from regular users, moved to Advanced Settings)
 enable_chunk = True  # Always enabled for long audio
@@ -341,7 +341,7 @@ def run_chunked_transcription(run_fn):
         # Update progress with detailed status
         progress_percent = i / len(ranges)
         progress_bar.progress(progress_percent)
-        status_text.text(f"Đang xử lý đoạn {i}/{len(ranges)} ({progress_percent*100:.0f}%)...")
+        status_text.text(f"Processing chunk {i}/{len(ranges)} ({progress_percent*100:.0f}%)...")
 
     # Cleanup all temp files after all transcriptions are complete
     for tmp_file in temp_files_to_cleanup:
@@ -359,7 +359,7 @@ def run_chunked_transcription(run_fn):
     
     if error_count > 0 and len(results) == 0:
         # All chunks failed
-        raise Exception(f"Tất cả {error_count} đoạn xử lý đều thất bại. Vui lòng kiểm tra file audio và model.")
+        raise Exception(f"All {error_count} chunks failed. Please check audio file and model.")
 
     return "\n".join(results) if results else ""
 
@@ -373,15 +373,15 @@ if st.button("🚀 Start Transcription", type="primary", use_container_width=Tru
             if selected_model_id == "whisper":
                 model, device = load_whisper_model(model_size)
                 if model is None:
-                    st.error("❌ Không thể load Whisper model. Vui lòng kiểm tra lỗi ở trên.")
+                    st.error("❌ Cannot load Whisper model. Please check errors above.")
                     st.stop()
-                # Sử dụng tối ưu cho tiếng Việt (default: enabled)
+                # Use optimization for Vietnamese (default: enabled)
                 text = run_chunked_transcription(
                     lambda p: transcribe_audio(
                         model, 
                         p, 
                         language="vi",
-                        use_vietnamese_optimization=True  # Tự động áp dụng initial prompt và tối ưu
+                        use_vietnamese_optimization=True  # Automatically apply initial prompt and optimization
                     )
                 )
             else:
@@ -397,53 +397,53 @@ if st.button("🚀 Start Transcription", type="primary", use_container_width=Tru
 
         except Exception as e:
             error_msg = str(e)
-            st.error(f"❌ Transcription thất bại: {error_msg}")
+            st.error(f"❌ Transcription failed: {error_msg}")
             
             # Provide helpful context for common errors with better formatting
             error_help = st.container()
             with error_help:
                 if "NoneType" in error_msg or "None" in error_msg:
                     st.warning("""
-                    **💡 Lỗi NoneType - Nguyên nhân thường gặp:**
-                    - Audio file không thể load (kiểm tra format và path)
-                    - Model không được load thành công
-                    - FFmpeg không tìm thấy hoặc không hoạt động
+                    **💡 NoneType Error - Common causes:**
+                    - Audio file cannot be loaded (check format and path)
+                    - Model failed to load
+                    - FFmpeg not found or not working
                     
-                    **🔧 Cách khắc phục:**
-                    1. Quay lại trang Audio Input để kiểm tra audio file
-                    2. Xem lỗi ở trên để biết model có load thành công không
-                    3. Kiểm tra FFmpeg setup trong System Status
+                    **🔧 How to fix:**
+                    1. Go back to Audio Input page to check audio file
+                    2. Check errors above to see if model loaded successfully
+                    3. Check FFmpeg setup in System Status
                     """)
                 elif "Failed to load audio" in error_msg or "load audio" in error_msg.lower():
                     st.warning("""
-                    **💡 Lỗi load audio - Nguyên nhân thường gặp:**
-                    - File format không được hỗ trợ
-                    - File bị hỏng hoặc không hợp lệ
-                    - FFmpeg không tìm thấy hoặc không hoạt động
+                    **💡 Audio Load Error - Common causes:**
+                    - File format not supported
+                    - File corrupted or invalid
+                    - FFmpeg not found or not working
                     
-                    **🔧 Cách khắc phục:**
-                    1. Thử upload lại audio file ở trang Audio Input
-                    2. Kiểm tra format file (WAV, MP3, FLAC, M4A, OGG)
-                    3. Đảm bảo file không bị hỏng
-                    4. Kiểm tra FFmpeg setup
+                    **🔧 How to fix:**
+                    1. Try uploading audio file again at Audio Input page
+                    2. Check file format (WAV, MP3, FLAC, M4A, OGG)
+                    3. Ensure file is not corrupted
+                    4. Check FFmpeg setup
                     """)
                 elif "memory" in error_msg.lower() or "out of memory" in error_msg.lower():
                     st.warning("""
-                    **💡 Lỗi bộ nhớ - File audio quá lớn:**
+                    **💡 Memory Error - Audio file too large:**
                     
-                    **🔧 Cách khắc phục:**
-                    1. Chia nhỏ file audio thành các đoạn ngắn hơn
-                    2. Sử dụng preset 'Nhanh' thay vì 'Chính xác'
-                    3. Giảm kích thước model (chọn 'tiny' hoặc 'base')
+                    **🔧 How to fix:**
+                    1. Split audio file into smaller segments
+                    2. Use 'Fast' preset instead of 'Accurate'
+                    3. Reduce model size (choose 'tiny' or 'base')
                     """)
                 elif "cuda" in error_msg.lower() or "gpu" in error_msg.lower():
                     st.info("""
-                    **💡 Lỗi GPU - Hệ thống sẽ tự động chuyển sang CPU:**
-                    - Nếu có GPU, kiểm tra CUDA installation
-                    - Nếu không có GPU, hệ thống sẽ sử dụng CPU (chậm hơn)
+                    **💡 GPU Error - System will automatically switch to CPU:**
+                    - If GPU available, check CUDA installation
+                    - If no GPU, system will use CPU (slower)
                     """)
                 else:
-                    with st.expander("🔍 Chi tiết lỗi"):
+                    with st.expander("🔍 Error details"):
                         st.exception(e)
 
 # ================== OUTPUT ==================
@@ -463,9 +463,9 @@ if st.session_state.transcript_text:
         key_prefix="transcript",
     )
 
-    if st.button("💾 Save edits"):
+    if st.button("💾 Save Edits"):
         st.session_state.transcript_text = edited_text
-        st.success("Saved")
+        st.success("✅ Saved")
         st.rerun()
 
     st.divider()

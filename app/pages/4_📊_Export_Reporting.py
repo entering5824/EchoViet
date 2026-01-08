@@ -1,6 +1,6 @@
 """
 Export & Reporting Page
-Xuất transcript và hiển thị statistics với visualization nâng cao
+Export transcript and display statistics with advanced visualization
 """
 import streamlit as st
 import os
@@ -34,11 +34,11 @@ for key, default in (
 ):
     st.session_state.setdefault(key, default)
 
-render_page_header("Export & Reporting", "Xuất transcript và xem thống kê chi tiết", "📊")
+render_page_header("Export & Reporting", "Export transcript and view detailed statistics", "📊")
 
 # Check if transcript is available
 if not st.session_state.transcript_text:
-    st.warning("⚠️ Vui lòng chạy transcription trước tại trang 'Transcription'")
+    st.warning("⚠️ Please run transcription first at 'Transcription' page")
     if st.button("📝 Go to Transcription", type="primary"):
         st.switch_page("pages/2_📝_Transcription.py")
 else:
@@ -60,7 +60,7 @@ else:
         st.markdown(f"""
         <div class="stat-box">
             <h3 style="margin:0; color: #1f4e79;">{stats['word_count']:,}</h3>
-            <p style="margin:0.5rem 0 0 0; color: #666;">Số từ</p>
+            <p style="margin:0.5rem 0 0 0; color: #666;">Words</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -69,7 +69,7 @@ else:
         st.markdown(f"""
         <div class="stat-box">
             <h3 style="margin:0; color: #1f4e79;">{duration_min:.2f} min</h3>
-            <p style="margin:0.5rem 0 0 0; color: #666;">Thời lượng audio</p>
+            <p style="margin:0.5rem 0 0 0; color: #666;">Audio duration</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -77,7 +77,7 @@ else:
         st.markdown(f"""
         <div class="stat-box">
             <h3 style="margin:0; color: #1f4e79;">{stats['words_per_minute']:.1f}</h3>
-            <p style="margin:0.5rem 0 0 0; color: #666;">Tốc độ nói (WPM)</p>
+            <p style="margin:0.5rem 0 0 0; color: #666;">Speaking rate (WPM)</p>
         </div>
         """, unsafe_allow_html=True)
     
@@ -85,14 +85,14 @@ else:
         st.markdown(f"""
         <div class="stat-box">
             <h3 style="margin:0; color: #1f4e79;">{stats['sentence_count']:,}</h3>
-            <p style="margin:0.5rem 0 0 0; color: #666;">Số câu</p>
+            <p style="margin:0.5rem 0 0 0; color: #666;">Sentences</p>
         </div>
         """, unsafe_allow_html=True)
     
     # Speaker statistics with visual charts
     if stats.get("speakers", 0) > 0:
         st.markdown("---")
-        st.subheader("👥 Thống kê theo người nói")
+        st.subheader("👥 Statistics by Speaker")
         
         try:
             import pandas as pd
@@ -103,8 +103,8 @@ else:
             for speaker, speaker_stat in stats["speaker_stats"].items():
                 speaker_data.append({
                     "Speaker": speaker,
-                    "Thời gian (s)": f"{speaker_stat['duration']:.1f}",
-                    "Số từ": speaker_stat['word_count'],
+                    "Duration (s)": f"{speaker_stat['duration']:.1f}",
+                    "Words": speaker_stat['word_count'],
                     "WPM": f"{speaker_stat['words_per_minute']:.1f}",
                     "Segments": speaker_stat['segments']
                 })
@@ -121,8 +121,8 @@ else:
                 fig_duration = px.bar(
                     x=list(durations.keys()),
                     y=list(durations.values()),
-                    title="Thời gian nói theo người",
-                    labels={"x": "Speaker", "y": "Thời gian (giây)"}
+                    title="Speaking time by person",
+                    labels={"x": "Speaker", "y": "Duration (seconds)"}
                 )
                 st.plotly_chart(fig_duration, use_container_width=True)
             
@@ -132,24 +132,24 @@ else:
                 fig_words = px.bar(
                     x=list(word_counts.keys()),
                     y=list(word_counts.values()),
-                    title="Số từ theo người",
-                    labels={"x": "Speaker", "y": "Số từ"}
+                    title="Word count by person",
+                    labels={"x": "Speaker", "y": "Words"}
                 )
                 st.plotly_chart(fig_words, use_container_width=True)
         except ImportError:
             # Fallback if plotly/pandas not available
             for speaker, speaker_stat in stats["speaker_stats"].items():
-                with st.expander(f"{speaker} - {speaker_stat['word_count']} từ"):
+                with st.expander(f"{speaker} - {speaker_stat['word_count']} words"):
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Thời gian nói", f"{speaker_stat['duration']:.2f}s")
+                        st.metric("Speaking time", f"{speaker_stat['duration']:.2f}s")
                     with col2:
-                        st.metric("Số segments", speaker_stat['segments'])
+                        st.metric("Segments", speaker_stat['segments'])
                     with col3:
                         st.metric("WPM", f"{speaker_stat['words_per_minute']:.1f}")
     else:
         # Show basic statistics if no speaker diarization
-        st.info("💡 Chạy Speaker Diarization để xem thống kê chi tiết theo người nói")
+        st.info("💡 Run Speaker Diarization to see detailed statistics by speaker")
     
     # Export section
     st.markdown("---")
@@ -225,32 +225,32 @@ else:
     
     # Preview transcript with better layout
     st.markdown("---")
-    st.subheader("📝 Xem Trước Transcript")
+    st.subheader("📝 Preview Transcript")
     
     preview_mode = st.radio(
-        "Chế độ xem:",
-        ["Toàn bộ", "Rút gọn (500 ký tự đầu)"],
+        "View mode:",
+        ["Full", "Abbreviated (first 500 characters)"],
         horizontal=True,
-        help="Chọn cách hiển thị transcript"
+        help="Select how to display transcript"
     )
     
-    if preview_mode == "Rút gọn (500 ký tự đầu)":
+    if preview_mode == "Abbreviated (first 500 characters)":
         preview_text = st.session_state.transcript_text[:500] + "..." if len(st.session_state.transcript_text) > 500 else st.session_state.transcript_text
         st.text_area(
             "Transcript (preview):",
             preview_text,
             height=200,
             key="export_preview_short",
-            help=f"Hiển thị {min(500, len(st.session_state.transcript_text))} ký tự đầu. Tổng: {len(st.session_state.transcript_text)} ký tự"
+            help=f"Showing {min(500, len(st.session_state.transcript_text))} first characters. Total: {len(st.session_state.transcript_text)} characters"
         )
-        st.caption(f"💡 Đang hiển thị {min(500, len(st.session_state.transcript_text))} ký tự đầu. Chọn 'Toàn bộ' để xem đầy đủ.")
+        st.caption(f"💡 Showing {min(500, len(st.session_state.transcript_text))} first characters. Select 'Full' to see complete transcript.")
     else:
         st.text_area(
             "Transcript:",
             st.session_state.transcript_text,
             height=300,
             key="export_preview_full",
-            help="Xem toàn bộ transcript trước khi export"
+            help="View full transcript before export"
         )
 
 # ===== Footer =====

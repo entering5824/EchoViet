@@ -1,6 +1,6 @@
 """
 Advanced Settings Page
-Cấu hình nâng cao cho technical users - Model sizes, hyperparameters, pipeline config
+Advanced configuration for technical users - Model sizes, hyperparameters, pipeline config
 """
 import streamlit as st
 import os
@@ -25,10 +25,10 @@ st.set_page_config(
     layout="wide"
 )
 
-render_page_header("Advanced Settings & Configuration", "Trang này dành cho người dùng kỹ thuật. Thay đổi settings có thể ảnh hưởng đến hiệu suất và độ chính xác.", "⚙️")
+render_page_header("Advanced Settings & Configuration", "This page is for technical users. Changing settings may affect performance and accuracy.", "⚙️")
 
 # Warning for non-technical users
-st.warning("⚠️ Trang này dành cho người dùng kỹ thuật. Thay đổi settings có thể ảnh hưởng đến hiệu suất và độ chính xác.")
+st.warning("⚠️ This page is for technical users. Changing settings may affect performance and accuracy.")
 
 # Load current settings
 current_settings = load_settings()
@@ -52,7 +52,7 @@ with tab1:
         selected_model_id = st.selectbox(
             "ASR Model",
             model_ids,
-            help="Chọn model ASR"
+            help="Select ASR model"
         )
         
         model_info = get_model_info(selected_model_id)
@@ -63,14 +63,14 @@ with tab1:
                 "Model Size",
                 model_info["sizes"],
                 index=model_info["sizes"].index(model_info.get("default_size", model_info["sizes"][0])),
-                help="Kích thước model: tiny (nhanh, ít chính xác) → large (chậm, chính xác nhất)"
+                help="Model size: tiny (fast, less accurate) → large (slow, most accurate)"
             )
-            st.caption(f"💡 Model size được chọn: {model_size}")
+            st.caption(f"💡 Selected model size: {model_size}")
         
         whisper_model_path = st.text_input(
             "Whisper Model Path",
             value=current_settings["model"]["whisper_model_path"],
-            help="Đường dẫn đến Whisper model (để trống để dùng default)"
+            help="Path to Whisper model (leave empty to use default)"
         )
     
     with col2:
@@ -79,7 +79,7 @@ with tab1:
             ["cpu", "cuda"],
             index=0 if current_settings["model"]["device"] == "cpu" else 1,
             disabled=config.is_cloud(),
-            help="CPU hoặc CUDA (tự động CPU trên Cloud)"
+            help="CPU or CUDA (automatically CPU on Cloud)"
         )
         
         precision = st.selectbox(
@@ -94,14 +94,14 @@ with tab1:
         enable_chunk = st.checkbox(
             "Enable Chunking",
             value=True,
-            help="Chia audio thành chunks để xử lý"
+            help="Split audio into chunks for processing"
         )
         
         chunk_seconds = st.selectbox(
             "Chunk Length (seconds)",
             [15, 30, 45, 60, 90],
             index=2,  # Default 45
-            help="Độ dài mỗi chunk"
+            help="Length of each chunk"
         )
     
     current_settings["model"]["whisper_model_path"] = whisper_model_path
@@ -119,7 +119,7 @@ with tab2:
             min_value=1,
             max_value=20,
             value=current_settings["inference"]["beam_size"],
-            help="Số lượng beams cho beam search"
+            help="Number of beams for beam search"
         )
         
         batch_size = st.number_input(
@@ -127,7 +127,7 @@ with tab2:
             min_value=1,
             max_value=128,
             value=current_settings["inference"]["batch_size"],
-            help="Batch size cho inference"
+            help="Batch size for inference"
         )
     
     with col2:
@@ -137,7 +137,7 @@ with tab2:
             max_value=2.0,
             value=current_settings["inference"]["temperature"],
             step=0.1,
-            help="Temperature cho sampling (0.0 = greedy)"
+            help="Temperature for sampling (0.0 = greedy)"
         )
         
         best_of = st.number_input(
@@ -145,7 +145,7 @@ with tab2:
             min_value=1,
             max_value=20,
             value=current_settings["inference"]["best_of"],
-            help="Số lượng candidates để chọn"
+            help="Number of candidates to choose from"
         )
     
     current_settings["inference"]["beam_size"] = beam_size
@@ -164,7 +164,7 @@ with tab3:
             min_value=1,
             max_value=16,
             value=current_settings["resource"]["num_threads"],
-            help="Số lượng threads cho CPU"
+            help="Number of threads for CPU"
         )
         
         max_memory_mb = st.number_input(
@@ -173,7 +173,7 @@ with tab3:
             max_value=16384,
             value=current_settings["resource"]["max_memory_mb"],
             step=512,
-            help="Giới hạn memory usage"
+            help="Memory usage limit"
         )
     
     with col2:
@@ -181,7 +181,7 @@ with tab3:
             "Quantization",
             ["none", "int8", "int4"],
             index=["none", "int8", "int4"].index(current_settings["resource"]["quantization"]),
-            help="Model quantization (giảm memory nhưng có thể giảm accuracy)"
+            help="Model quantization (reduces memory but may reduce accuracy)"
         )
     
     current_settings["resource"]["num_threads"] = num_threads
@@ -197,7 +197,7 @@ with tab4:
         vad_enabled = st.checkbox(
             "Voice Activity Detection (VAD)",
             value=current_settings["pipeline"]["vad_enabled"],
-            help="Bật VAD để phát hiện speech segments"
+            help="Enable VAD to detect speech segments"
         )
         
         vad_threshold = st.slider(
@@ -206,7 +206,7 @@ with tab4:
             max_value=1.0,
             value=0.5,
             step=0.1,
-            help="Ngưỡng để phát hiện speech"
+            help="Threshold to detect speech"
         )
         
         min_segment_duration = st.number_input(
@@ -215,7 +215,7 @@ with tab4:
             max_value=5.0,
             value=0.5,
             step=0.1,
-            help="Độ dài segment tối thiểu"
+            help="Minimum segment duration"
         )
         
         max_segment_duration = st.number_input(
@@ -224,14 +224,14 @@ with tab4:
             max_value=60.0,
             value=30.0,
             step=1.0,
-            help="Độ dài segment tối đa"
+            help="Maximum segment duration"
         )
         
         diarization_backend = st.selectbox(
             "Diarization Backend",
             ["simple", "pyannote"],
             index=0 if current_settings["pipeline"]["diarization_backend"] == "simple" else 1,
-            help="Backend cho speaker diarization"
+            help="Backend for speaker diarization"
         )
     
     with col2:
@@ -239,7 +239,7 @@ with tab4:
             "Sample Rate (Hz)",
             [8000, 16000, 22050, 44100],
             index=1,  # Default 16000
-            help="Sample rate cho audio processing"
+            help="Sample rate for audio processing"
         )
         
         max_speakers = st.number_input(
@@ -247,7 +247,7 @@ with tab4:
             min_value=1,
             max_value=10,
             value=current_settings["pipeline"]["max_speakers"],
-            help="Số lượng người nói tối đa"
+            help="Maximum number of speakers"
         )
     
     current_settings["pipeline"]["vad_enabled"] = vad_enabled
@@ -271,7 +271,7 @@ with tab5:
             min_value=1024,
             max_value=65535,
             value=current_settings["deployment"]["api_port"],
-            help="Port cho FastAPI server"
+            help="Port for FastAPI server"
         )
     
     with col2:
@@ -308,14 +308,14 @@ with tab6:
         enable_evaluation = st.checkbox(
             "Enable Evaluation",
             value=current_settings["debug"]["enable_evaluation"],
-            help="Bật evaluation mode"
+            help="Enable evaluation mode"
         )
     
     with col2:
         wer_cer_enabled = st.checkbox(
             "Calculate WER/CER",
             value=current_settings["debug"]["wer_cer_enabled"],
-            help="Tính Word Error Rate và Character Error Rate"
+            help="Calculate Word Error Rate and Character Error Rate"
         )
     
     current_settings["debug"]["log_level"] = log_level
@@ -330,7 +330,7 @@ with col1:
     if st.button("💾 Save Settings", type="primary", use_container_width=True):
         format_type = st.radio("Format", ["JSON", "YAML"], horizontal=True, key="save_format")
         if save_settings(current_settings, format=format_type.lower()):
-            st.success(f"✅ Đã lưu settings vào settings.{format_type.lower()}")
+            st.success(f"✅ Saved settings to settings.{format_type.lower()}")
 
 with col2:
     uploaded_file = st.file_uploader("📁 Load Settings", type=["json", "yaml", "yml"], key="load_settings")
@@ -350,7 +350,7 @@ with col2:
 with col3:
     if st.button("🔄 Reset to Defaults", use_container_width=True):
         current_settings = load_settings()
-        st.success("✅ Đã reset về defaults!")
+            st.success("✅ Reset to defaults!")
         st.rerun()
 
 # Display current settings

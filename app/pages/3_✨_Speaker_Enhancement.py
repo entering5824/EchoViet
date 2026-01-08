@@ -1,7 +1,7 @@
 """
 Speaker & Text Enhancement Page
 Combined page: Speaker Diarization + AI Text Enhancement
-Làm transcript "đẹp & dùng được"
+Make transcript "clean & usable"
 """
 import streamlit as st
 import os
@@ -50,29 +50,29 @@ for key, default in (
 ):
     st.session_state.setdefault(key, default)
 
-render_page_header("Speaker & Text Enhancement", "Phân biệt người nói và làm sạch văn bản với AI", "✨")
+render_page_header("Speaker & Text Enhancement", "Identify speakers and clean text with AI", "✨")
 
 # Check prerequisites
 if not st.session_state.transcript_text:
-    st.warning("⚠️ Vui lòng chạy transcription trước tại trang 'Transcription'")
+    st.warning("⚠️ Please run transcription first at 'Transcription' page")
     if st.button("📝 Go to Transcription", type="primary"):
         st.switch_page("pages/2_📝_Transcription.py")
     st.stop()
 
-st.success("✅ Transcript đã sẵn sàng cho enhancement")
+st.success("✅ Transcript is ready for enhancement")
 
 # Simplified workflow: Show both options but make it clearer
-st.markdown("### 🎯 Chọn tính năng cải thiện")
+st.markdown("### 🎯 Select Enhancement Feature")
 
 enhancement_option = st.radio(
-    "Bạn muốn làm gì?",
-    ["✨ Chỉ cải thiện văn bản (AI Text Enhancement)", "👥 Phân biệt người nói (Speaker Diarization)", "🔄 Cả hai (Text + Speaker)"],
-    help="Chọn tính năng bạn muốn sử dụng. Có thể chạy cả hai nếu cần."
+    "What would you like to do?",
+    ["✨ Text Enhancement Only (AI Text Enhancement)", "👥 Speaker Diarization Only", "🔄 Both (Text + Speaker)"],
+    help="Select the feature you want to use. You can run both if needed."
 )
 
 # Determine which tabs to show
-show_diarization = enhancement_option in ["👥 Phân biệt người nói (Speaker Diarization)", "🔄 Cả hai (Text + Speaker)"]
-show_text_enhancement = enhancement_option in ["✨ Chỉ cải thiện văn bản (AI Text Enhancement)", "🔄 Cả hai (Text + Speaker)"]
+show_diarization = enhancement_option in ["👥 Speaker Diarization Only", "🔄 Both (Text + Speaker)"]
+show_text_enhancement = enhancement_option in ["✨ Text Enhancement Only (AI Text Enhancement)", "🔄 Both (Text + Speaker)"]
 
 # Use tabs only if both are selected
 if show_diarization and show_text_enhancement:
@@ -87,10 +87,10 @@ if show_diarization:
     if show_diarization and show_text_enhancement:
         with tab1:
             st.subheader("👥 Speaker Diarization")
-            st.caption("Phân biệt và gán nhãn người nói trong cuộc họp")
+            st.caption("Identify and label speakers in the meeting")
             
             if st.session_state.audio_data is None:
-                st.warning("⚠️ Cần audio data để chạy diarization. Vui lòng upload audio trước.")
+                st.warning("⚠️ Audio data required to run diarization. Please upload audio first.")
                 if st.button("🎤 Go to Audio Input", type="primary"):
                     st.switch_page("pages/1_🎤_Audio_Input.py")
             else:
@@ -99,33 +99,33 @@ if show_diarization:
                 
                 with col1:
                     max_speakers = st.number_input(
-                        "Số lượng người nói dự kiến",
+                        "Expected number of speakers",
                         min_value=1,
                         max_value=10,
                         value=4,
-                        help="Số lượng người nói tối đa trong audio. Hệ thống sẽ tự động phân loại và rotate giữa các speakers."
+                        help="Maximum number of speakers in audio. System will automatically classify and rotate between speakers."
                     )
                     
                     min_silence = st.slider(
-                        "Độ dài khoảng im lặng tối thiểu (giây)",
+                        "Minimum silence duration (seconds)",
                         min_value=0.1,
                         max_value=2.0,
                         value=0.5,
                         step=0.1,
-                        help="Khoảng im lặng tối thiểu để phân tách giữa các speakers"
+                        help="Minimum silence duration to separate between speakers"
                     )
                 
                 with col2:
                     st.info("""
-                    **💡 Hướng dẫn:**
-                    - Điều chỉnh số lượng người nói theo thực tế
-                    - Khoảng im lặng ngắn hơn = phát hiện nhiều chuyển đổi hơn
-                    - Có thể chỉnh sửa speaker labels sau khi chạy
+                    **💡 Guide:**
+                    - Adjust number of speakers according to reality
+                    - Shorter silence = detect more transitions
+                    - Can edit speaker labels after running
                     """)
                 
                 # Run diarization
-                if st.button("🚀 Chạy Speaker Diarization", type="primary", use_container_width=True):
-                    with st.spinner("Đang phân tích speaker..."):
+                if st.button("🚀 Run Speaker Diarization", type="primary", use_container_width=True):
+                    with st.spinner("Analyzing speakers..."):
                         try:
                             # Parse transcript text thành segments nếu chưa có
                             transcript_lines = st.session_state.transcript_text.split('\n')
@@ -158,20 +158,20 @@ if show_diarization:
                             if speaker_segments:
                                 st.session_state.speaker_segments = speaker_segments
                                 num_speakers = len(set(seg.get('speaker') for seg in speaker_segments))
-                                st.success(f"✅ Đã phát hiện {num_speakers} người nói trong {len(speaker_segments)} segments!")
+                                st.success(f"✅ Detected {num_speakers} speakers in {len(speaker_segments)} segments!")
                                 
                                 # Show preview
-                                st.markdown("#### 👁️ Xem trước kết quả")
+                                st.markdown("#### 👁️ Preview Results")
                                 preview_text = format_with_speakers(speaker_segments[:5])  # Show first 5 segments
-                                st.text_area("Preview (5 segments đầu):", preview_text, height=150, disabled=True)
-                                st.caption(f"Hiển thị {min(5, len(speaker_segments))} segments đầu tiên. Xem đầy đủ ở phần kết quả bên dưới.")
+                                st.text_area("Preview (first 5 segments):", preview_text, height=150, disabled=True)
+                                st.caption(f"Showing {min(5, len(speaker_segments))} first segments. See full results below.")
                             else:
-                                st.warning("⚠️ Không thể phân biệt speaker. Có thể do audio quá ngắn hoặc chỉ có 1 người nói.")
-                                st.info("💡 **Gợi ý**: \n- Đảm bảo audio có ít nhất 2 người nói\n- Kiểm tra audio có rõ ràng không\n- Thử điều chỉnh 'Khoảng im lặng tối thiểu' nhỏ hơn")
+                                st.warning("⚠️ Cannot distinguish speakers. May be due to audio too short or only 1 speaker.")
+                                st.info("💡 **Suggestion**: \n- Ensure audio has at least 2 speakers\n- Check if audio is clear\n- Try adjusting 'Minimum silence duration' smaller")
                         except Exception as e:
                             error_msg = str(e)
-                            st.error(f"❌ Lỗi khi chạy diarization: {error_msg}")
-                            st.info("💡 **Gợi ý**: \n- Kiểm tra audio có hợp lệ không\n- Đảm bảo đã upload audio ở trang Audio Input\n- Thử giảm số lượng người nói dự kiến")
+                            st.error(f"❌ Error running diarization: {error_msg}")
+                            st.info("💡 **Suggestion**: \n- Check if audio is valid\n- Ensure audio was uploaded at Audio Input page\n- Try reducing expected number of speakers")
                             with st.expander("🔍 Chi tiết lỗi"):
                                 import traceback
                                 st.code(traceback.format_exc())
@@ -210,37 +210,37 @@ if show_diarization:
                         render_diarization_timeline(st.session_state.speaker_segments, duration)
                     
                     # Transcript with speakers
-                    st.subheader("📝 Transcript với Speaker Labels")
+                    st.subheader("📝 Transcript with Speaker Labels")
                     
                     # Allow manual editing of speaker labels
-                    with st.expander("✏️ Chỉnh sửa Speaker Labels", expanded=False):
-                        st.caption("Thay đổi tên speaker hoặc gán lại segments cho speakers khác")
+                    with st.expander("✏️ Edit Speaker Labels", expanded=False):
+                        st.caption("Change speaker names or reassign segments to other speakers")
                         
                         # Speaker renaming
-                        st.markdown("**Đổi tên Speakers:**")
+                        st.markdown("**Rename Speakers:**")
                         rename_cols = st.columns(min(len(speakers), 4))
                         speaker_rename_map = {}
                         for idx, speaker in enumerate(sorted(speakers)):
                             with rename_cols[idx % len(rename_cols)]:
                                 new_name = st.text_input(
-                                    f"Đổi tên {speaker}",
+                                    f"Rename {speaker}",
                                     value=speaker,
                                     key=f"rename_{speaker}"
                                 )
                                 if new_name and new_name != speaker:
                                     speaker_rename_map[speaker] = new_name
                         
-                        if speaker_rename_map and st.button("💾 Áp dụng đổi tên"):
+                        if speaker_rename_map and st.button("💾 Apply Rename"):
                             for seg in st.session_state.speaker_segments:
                                 old_speaker = seg.get('speaker')
                                 if old_speaker in speaker_rename_map:
                                     seg['speaker'] = speaker_rename_map[old_speaker]
-                            st.success("✅ Đã cập nhật tên speakers!")
+                            st.success("✅ Updated speaker names!")
                             st.rerun()
                     
                     formatted_transcript = format_with_speakers(st.session_state.speaker_segments)
                     st.text_area(
-                        "Transcript với speakers:",
+                        "Transcript with speakers:",
                         formatted_transcript,
                         height=300,
                         key="diarized_transcript"
@@ -249,9 +249,9 @@ if show_diarization:
                     # Update transcript text with speaker labels
                     col1, col2 = st.columns(2)
                     with col1:
-                        if st.button("💾 Áp dụng Speaker Labels vào Transcript", type="primary", use_container_width=True):
+                        if st.button("💾 Apply Speaker Labels to Transcript", type="primary", use_container_width=True):
                             st.session_state.transcript_text = formatted_transcript
-                            st.success("✅ Đã cập nhật transcript với speaker labels!")
+                            st.success("✅ Updated transcript with speaker labels!")
                             st.rerun()
                     
                     with col2:
@@ -371,33 +371,33 @@ if show_text_enhancement:
     if show_diarization and show_text_enhancement:
         with tab2:
             st.subheader("✨ AI Text Enhancement")
-            st.caption("Làm sạch và cải thiện văn bản với AI")
+            st.caption("Clean and improve text with AI")
             
             # Simplified mode selection - default to recommended
             use_advanced_enhance = st.checkbox(
-                "⚙️ Hiển thị tùy chọn nâng cao",
+                "⚙️ Show advanced options",
                 value=False,
-                help="Bật để tùy chỉnh chi tiết các thông số cải thiện văn bản"
+                help="Enable to customize detailed text enhancement parameters"
             )
             
             if use_advanced_enhance:
                 mode_options = {
-                    "simple": "🎯 Đơn giản - Tự động cải thiện cơ bản",
-                    "recommended": "⭐ Đề xuất - Cải thiện tối ưu (Khuyến nghị)",
-                    "advanced": "⚙️ Nâng cao - Tùy chỉnh chi tiết"
+                    "simple": "🎯 Simple - Automatic basic enhancement",
+                    "recommended": "⭐ Recommended - Optimal enhancement (Recommended)",
+                    "advanced": "⚙️ Advanced - Detailed customization"
                 }
                 
                 selected_mode = st.radio(
-                    "Chọn chế độ cải thiện:",
+                    "Select enhancement mode:",
                     options=list(mode_options.keys()),
                     format_func=lambda x: mode_options[x],
                     index=list(mode_options.keys()).index(st.session_state.enhancement_mode) if st.session_state.enhancement_mode in mode_options else 1,
-                    help="Chế độ 'Đề xuất' là lựa chọn tốt nhất cho hầu hết trường hợp"
+                    help="'Recommended' mode is the best choice for most cases"
                 )
                 st.session_state.enhancement_mode = selected_mode
             else:
                 st.session_state.enhancement_mode = "recommended"
-                st.info("💡 **Chế độ Đề xuất**: Sử dụng cài đặt tối ưu. Bật 'Tùy chọn nâng cao' để tùy chỉnh.")
+                st.info("💡 **Recommended Mode**: Uses optimal settings. Enable 'Advanced options' to customize.")
             
             # Initialize variables to avoid NameError
             auto_punctuation = True
@@ -424,52 +424,52 @@ if show_text_enhancement:
                 summarize_enabled = False
                 use_gemini = False
                 
-                st.markdown("**Cài đặt tự động:** Tự động sửa dấu câu, viết hoa đầu câu, loại bỏ khoảng trắng thừa, cải thiện tiếng Việt")
+                st.markdown("**Automatic settings:** Automatically fix punctuation, capitalize sentences, remove extra spaces, improve Vietnamese")
             
             elif st.session_state.enhancement_mode == "recommended":
                 # Recommended mode: Show key options
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    auto_punctuation = st.checkbox("Tự động sửa dấu câu", value=True, help="Sửa và chuẩn hóa dấu câu tiếng Việt")
-                    capitalize_sent = st.checkbox("Viết hoa đầu câu", value=True, help="Viết hoa chữ cái đầu mỗi câu")
-                    remove_spaces = st.checkbox("Loại bỏ khoảng trắng thừa", value=True, help="Xóa các khoảng trắng không cần thiết")
-                    improve_vietnamese = st.checkbox("Cải thiện tiếng Việt", value=True, help="Áp dụng các cải thiện đặc biệt cho tiếng Việt")
+                    auto_punctuation = st.checkbox("Auto fix punctuation", value=True, help="Fix and normalize Vietnamese punctuation")
+                    capitalize_sent = st.checkbox("Capitalize sentences", value=True, help="Capitalize first letter of each sentence")
+                    remove_spaces = st.checkbox("Remove extra spaces", value=True, help="Remove unnecessary spaces")
+                    improve_vietnamese = st.checkbox("Improve Vietnamese", value=True, help="Apply special improvements for Vietnamese")
                     
                     # Gemini AI option
                     if gemini_available:
                         use_gemini = st.checkbox(
-                            "🤖 Sử dụng Gemini AI (Khuyến nghị)",
+                            "🤖 Use Gemini AI (Recommended)",
                             value=True,
-                            help="Sử dụng Google Gemini AI để cải thiện văn bản với độ chính xác cao hơn"
+                            help="Use Google Gemini AI to improve text with higher accuracy"
                         )
                         if use_gemini:
-                            st.info("💡 Gemini AI sẽ cải thiện văn bản với AI, sau đó áp dụng các cải thiện khác")
+                            st.info("💡 Gemini AI will improve text with AI, then apply other enhancements")
                     else:
-                        st.info("💡 Để sử dụng Gemini AI, cần cấu hình GEMINI_API_KEY trong environment variables")
+                        st.info("💡 To use Gemini AI, configure GEMINI_API_KEY in environment variables")
                 
                 with col2:
-                    extract_keywords_enabled = st.checkbox("Extract keywords", value=True, help="Trích xuất từ khóa quan trọng")
-                    summarize_enabled = st.checkbox("Tạo summary", value=True, help="Tạo tóm tắt nội dung")
+                    extract_keywords_enabled = st.checkbox("Extract keywords", value=True, help="Extract important keywords")
+                    summarize_enabled = st.checkbox("Create summary", value=True, help="Create content summary")
                     
                     if extract_keywords_enabled:
                         num_keywords = st.number_input(
-                            "Số keywords",
+                            "Number of keywords",
                             min_value=5,
                             max_value=50,
                             value=10,
-                            help="Số lượng từ khóa cần trích xuất"
+                            help="Number of keywords to extract"
                         )
                     else:
                         num_keywords = 10
                     
                     if summarize_enabled:
                         num_sentences = st.number_input(
-                            "Số câu trong summary",
+                            "Number of sentences in summary",
                             min_value=1,
                             max_value=10,
                             value=3,
-                            help="Số câu tối đa trong tóm tắt"
+                            help="Maximum number of sentences in summary"
                         )
                     else:
                         num_sentences = 3
@@ -482,29 +482,29 @@ if show_text_enhancement:
                 
                 with col1:
                     st.markdown("**Formatting Options:**")
-                    auto_punctuation = st.checkbox("Tự động sửa dấu câu", value=True)
-                    capitalize_sent = st.checkbox("Viết hoa đầu câu", value=True)
-                    remove_spaces = st.checkbox("Loại bỏ khoảng trắng thừa", value=True)
-                    improve_vietnamese = st.checkbox("Cải thiện tiếng Việt", value=True)
+                    auto_punctuation = st.checkbox("Auto fix punctuation", value=True)
+                    capitalize_sent = st.checkbox("Capitalize sentences", value=True)
+                    remove_spaces = st.checkbox("Remove extra spaces", value=True)
+                    improve_vietnamese = st.checkbox("Improve Vietnamese", value=True)
                     
                     # Gemini AI option
                     if gemini_available:
                         use_gemini = st.checkbox(
-                            "🤖 Sử dụng Gemini AI",
+                            "🤖 Use Gemini AI",
                             value=False,
-                            help="Sử dụng Google Gemini AI để cải thiện văn bản"
+                            help="Use Google Gemini AI to improve text"
                         )
                     else:
-                        st.info("💡 Để sử dụng Gemini AI, cần cấu hình GEMINI_API_KEY trong environment variables")
+                        st.info("💡 To use Gemini AI, configure GEMINI_API_KEY in environment variables")
                         use_gemini = False
                 
                 with col2:
                     st.markdown("**Analysis Options:**")
                     extract_keywords_enabled = st.checkbox("Extract keywords", value=False)
-                    summarize_enabled = st.checkbox("Tạo summary", value=False)
+                    summarize_enabled = st.checkbox("Create summary", value=False)
                     
                     num_keywords = st.number_input(
-                        "Số keywords",
+                        "Number of keywords",
                         min_value=5,
                         max_value=50,
                         value=10,
@@ -512,7 +512,7 @@ if show_text_enhancement:
                     )
                     
                     num_sentences = st.number_input(
-                        "Số câu trong summary",
+                        "Number of sentences in summary",
                         min_value=1,
                         max_value=10,
                         value=3,
@@ -532,37 +532,37 @@ if show_text_enhancement:
             
             # Show preview before applying
             st.markdown("---")
-            st.markdown("### 👁️ Xem trước")
+            st.markdown("### 👁️ Preview")
             
             preview_col1, preview_col2 = st.columns(2)
             with preview_col1:
-                st.markdown("**📝 Văn bản gốc:**")
+                st.markdown("**📝 Original text:**")
                 preview_original = st.session_state.transcript_text[:500] + "..." if len(st.session_state.transcript_text) > 500 else st.session_state.transcript_text
                 st.text_area("Original (preview):", preview_original, height=200, disabled=True, key="preview_original_enhance")
-                st.caption(f"Hiển thị {min(500, len(st.session_state.transcript_text))} ký tự đầu. Tổng: {len(st.session_state.transcript_text)} ký tự")
+                st.caption(f"Showing {min(500, len(st.session_state.transcript_text))} first characters. Total: {len(st.session_state.transcript_text)} characters")
             
             with preview_col2:
-                st.markdown("**✨ Văn bản sau cải thiện:**")
-                st.info("Kết quả sẽ hiển thị ở đây sau khi bạn nhấn 'Áp dụng'")
+                st.markdown("**✨ Enhanced text:**")
+                st.info("Results will be displayed here after you click 'Apply'")
             
             # Apply enhancement button
-            if st.button("✨ Áp Dụng Cải Thiện Văn Bản", type="primary", use_container_width=True, key="apply_enhance_tab"):
+            if st.button("✨ Apply Text Enhancement", type="primary", use_container_width=True, key="apply_enhance_tab"):
                 with st.spinner("⏳ Đang xử lý với AI..."):
                     try:
                         text_to_enhance = st.session_state.transcript_text
                         
                         # Step 1: Use Gemini AI if enabled
                         if use_gemini and gemini_available:
-                            with st.spinner("🤖 Đang cải thiện với Gemini AI..."):
+                            with st.spinner("🤖 Improving with Gemini AI..."):
                                 try:
                                     gemini_enhanced = enhance_with_gemini(text_to_enhance)
                                     if gemini_enhanced:
                                         text_to_enhance = gemini_enhanced
-                                        st.success("✅ Gemini AI đã cải thiện văn bản")
+                                        st.success("✅ Gemini AI improved the text")
                                     else:
-                                        st.warning("⚠️ Gemini AI không trả về kết quả, sử dụng phương pháp cơ bản")
+                                        st.warning("⚠️ Gemini AI did not return results, using basic method")
                                 except Exception as gemini_error:
-                                    st.warning(f"⚠️ Lỗi khi sử dụng Gemini AI: {str(gemini_error)}. Sử dụng phương pháp cơ bản.")
+                                    st.warning(f"⚠️ Error using Gemini AI: {str(gemini_error)}. Using basic method.")
                         
                         # Step 2: Apply formatting options
                         formatting_options = {
@@ -581,18 +581,18 @@ if show_text_enhancement:
                         st.session_state.enhancement_num_keywords = num_keywords
                         st.session_state.enhancement_num_sentences = num_sentences
                         
-                        st.success("✅ Đã xử lý thành công!")
+                        st.success("✅ Processed successfully!")
                         
                         # Show preview of enhanced text
                         preview_enhanced = enhanced_text[:500] + "..." if len(enhanced_text) > 500 else enhanced_text
                         with preview_col2:
                             st.text_area("Enhanced (preview):", preview_enhanced, height=200, disabled=True, key="preview_enhanced_result")
-                            st.caption(f"Hiển thị {min(500, len(enhanced_text))} ký tự đầu. Tổng: {len(enhanced_text)} ký tự")
+                            st.caption(f"Showing {min(500, len(enhanced_text))} first characters. Total: {len(enhanced_text)} characters")
                         
                         st.rerun()
                     except Exception as e:
-                        st.error(f"❌ Lỗi khi cải thiện văn bản: {str(e)}")
-                        st.info("💡 **Gợi ý**: \n- Kiểm tra transcript có hợp lệ không\n- Thử lại với chế độ 'Đơn giản'\n- Kiểm tra GEMINI_API_KEY nếu sử dụng Gemini AI")
+                        st.error(f"❌ Error improving text: {str(e)}")
+                        st.info("💡 **Suggestion**: \n- Check if transcript is valid\n- Try again with 'Simple' mode\n- Check GEMINI_API_KEY if using Gemini AI")
                         with st.expander("🔍 Chi tiết lỗi"):
                             import traceback
                             st.code(traceback.format_exc())
@@ -604,7 +604,7 @@ if show_text_enhancement:
         
         # Side-by-side comparison
         compare_mode = st.radio(
-            "Chế độ hiển thị",
+            "Display mode",
             ["Enhanced only", "Side-by-side comparison"],
             horizontal=True,
             key="compare_mode"
@@ -643,10 +643,10 @@ if show_text_enhancement:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            if st.button("💾 Lưu Enhanced Transcript", type="primary", use_container_width=True):
+            if st.button("💾 Save Enhanced Transcript", type="primary", use_container_width=True):
                 st.session_state.transcript_text = enhanced_text
                 st.session_state.transcript_enhanced = ""
-                st.success("✅ Đã lưu enhanced transcript!")
+                st.success("✅ Saved enhanced transcript!")
                 st.rerun()
         
         with col2:
@@ -681,7 +681,7 @@ if show_text_enhancement:
                 keyword_html = " ".join([f'<span style="background-color: #e3f2fd; padding: 5px 10px; border-radius: 15px; margin: 5px; display: inline-block; font-weight: bold;">{kw}</span>' for kw in keywords])
                 st.markdown(keyword_html, unsafe_allow_html=True)
             else:
-                st.info("Không tìm thấy keywords")
+                st.info("No keywords found")
         
         # Summary - use session state values
         summarize_enabled = st.session_state.get("enhancement_summarize", False)
@@ -691,9 +691,9 @@ if show_text_enhancement:
             num_sentences = st.session_state.get("enhancement_num_sentences", 3)
             summary = simple_summarize(enhanced_text, max_sentences=num_sentences)
             if summary:
-                st.info(f"**Tóm tắt:** {summary}")
+                st.info(f"**Summary:** {summary}")
             else:
-                st.info("Không thể tạo summary")
+                st.info("Cannot create summary")
 
 # ===== Navigation =====
 st.markdown("---")

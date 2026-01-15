@@ -12,7 +12,6 @@ from app.components.layout import apply_custom_css, render_page_header
 from app.components.status_display import render_status_display
 from app.components.footer import render_footer
 from app.components.pipeline_diagram import render_pipeline_diagram
-from app.components.wireframe_diagram import render_wireframe_diagram
 
 # Page config
 st.set_page_config(
@@ -125,8 +124,6 @@ focused on **meetings, interviews, and long notes**.
 st.markdown("#### 🔄 Processing Pipeline")
 render_pipeline_diagram()
 
-# Wireframe / Sitemap Diagram
-render_wireframe_diagram()
 
 # Features in a cleaner layout
 st.markdown("#### ✨ Key Features")

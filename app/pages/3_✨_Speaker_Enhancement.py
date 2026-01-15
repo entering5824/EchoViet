@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import re
+from collections import Counter
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -36,6 +37,14 @@ st.set_page_config(
     page_icon="✨",
     layout="wide"
 )
+
+# Helper: đếm số từ trong text
+def count_words(text: str) -> int:
+    if not text:
+        return 0
+    # Đếm theo word boundary để ổn định hơn với tiếng Việt có dấu
+    words = re.findall(r'\b\w+\b', text)
+    return len(words)
 
 # Initialize session state
 for key, default in (
@@ -519,27 +528,31 @@ if show_text_enhancement:
                         disabled=not summarize_enabled
                     )
             
-            # Display original transcript
-            st.markdown("---")
-            st.markdown("#### 📝 Original Transcript")
-            st.text_area(
-                "Original:",
-                st.session_state.transcript_text,
-                height=200,
-                key="original_transcript_enhance",
-                disabled=True
-            )
-            
-            # Show preview before applying
+            # Thống kê + preview trước khi áp dụng
             st.markdown("---")
             st.markdown("### 👁️ Preview")
             
             preview_col1, preview_col2 = st.columns(2)
             with preview_col1:
                 st.markdown("**📝 Original text:**")
-                preview_original = st.session_state.transcript_text[:500] + "..." if len(st.session_state.transcript_text) > 500 else st.session_state.transcript_text
-                st.text_area("Original (preview):", preview_original, height=200, disabled=True, key="preview_original_enhance")
-                st.caption(f"Showing {min(500, len(st.session_state.transcript_text))} first characters. Total: {len(st.session_state.transcript_text)} characters")
+                preview_original = (
+                    st.session_state.transcript_text[:500] + "..."
+                    if len(st.session_state.transcript_text) > 500
+                    else st.session_state.transcript_text
+                )
+                st.text_area(
+                    "Original (preview):",
+                    preview_original,
+                    height=200,
+                    disabled=True,
+                    key="preview_original_enhance",
+                )
+
+                original_word_count = count_words(st.session_state.transcript_text)
+                st.caption(
+                    f"Hiển thị {min(500, len(st.session_state.transcript_text))} ký tự đầu tiên. "
+                    f"Tổng: {len(st.session_state.transcript_text)} ký tự · {original_word_count} từ (ước tính)"
+                )
             
             with preview_col2:
                 st.markdown("**✨ Enhanced text:**")
@@ -675,11 +688,37 @@ if show_text_enhancement:
             st.markdown("---")
             st.subheader("🔑 Keywords")
             num_keywords = st.session_state.get("enhancement_num_keywords", 10)
-            keywords = extract_keywords(enhanced_text, top_k=num_keywords)
-            if keywords:
-                # Display as tags/chips
-                keyword_html = " ".join([f'<span style="background-color: #e3f2fd; padding: 5px 10px; border-radius: 15px; margin: 5px; display: inline-block; font-weight: bold;">{kw}</span>' for kw in keywords])
-                st.markdown(keyword_html, unsafe_allow_html=True)
+
+            # Lấy keyword kèm tần suất
+            keyword_counts = extract_keywords(
+                enhanced_text,
+                top_k=num_keywords,
+                return_with_counts=True,
+            )
+
+            if keyword_counts:
+                # Hiển thị tổng số từ sau cải thiện
+                enhanced_word_count = count_words(enhanced_text)
+                st.caption(f"Tổng số từ sau cải thiện (ước tính): **{enhanced_word_count}** từ")
+
+                # Hiển thị keyword theo dạng chips + bảng tần suất
+                tags_html = " ".join(
+                    [
+                        f'<span style="background-color: #e3f2fd; padding: 5px 10px; '
+                        f'border-radius: 15px; margin: 5px; display: inline-block; '
+                        f'font-weight: bold;">{kw}</span>'
+                        for kw, _ in keyword_counts
+                    ]
+                )
+                st.markdown(tags_html, unsafe_allow_html=True)
+
+                # Bảng tần suất để thấy keyword nào xuất hiện nhiều
+                st.markdown("**📊 Tần suất xuất hiện từ khóa:**")
+                freq_data = {
+                    "Keyword": [kw for kw, _ in keyword_counts],
+                    "Số lần xuất hiện": [cnt for _, cnt in keyword_counts],
+                }
+                st.table(freq_data)
             else:
                 st.info("No keywords found")
         

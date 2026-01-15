@@ -2,10 +2,14 @@
 Keyword extraction và summarization
 """
 import re
-from typing import List, Dict
+from typing import List, Dict, Tuple, Union
 from collections import Counter
 
-def extract_keywords(text: str, top_k: int = 10) -> List[str]:
+def extract_keywords(
+    text: str,
+    top_k: int = 10,
+    return_with_counts: bool = False
+) -> Union[List[str], List[Tuple[str, int]]]:
     """
     Extract keywords từ text (simple word frequency)
     
@@ -14,7 +18,8 @@ def extract_keywords(text: str, top_k: int = 10) -> List[str]:
         top_k: Số lượng keywords cần extract
     
     Returns:
-        List of keywords
+        - List[str]: danh sách keywords (mặc định)
+        - List[Tuple[str, int]]: (keyword, count) nếu return_with_counts=True
     """
     if not text:
         return []
@@ -36,7 +41,11 @@ def extract_keywords(text: str, top_k: int = 10) -> List[str]:
     # Count frequency
     word_freq = Counter(keywords)
     
-    # Get top k
+    # Trả về kèm tần suất nếu cần
+    if return_with_counts:
+        return word_freq.most_common(top_k)
+    
+    # Get top k (chỉ trả về từ)
     top_keywords = [word for word, _ in word_freq.most_common(top_k)]
     
     return top_keywords

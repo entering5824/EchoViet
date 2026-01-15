@@ -327,7 +327,7 @@ st.markdown("---")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    if st.button("💾 Save Settings", type="primary", use_container_width=True):
+    if st.button("💾 Save Settings", type="primary", width='stretch'):
         format_type = st.radio("Format", ["JSON", "YAML"], horizontal=True, key="save_format")
         if save_settings(current_settings, format=format_type.lower()):
             st.success(f"✅ Saved settings to settings.{format_type.lower()}")
@@ -348,9 +348,9 @@ with col2:
             os.unlink(tmp_path)
 
 with col3:
-    if st.button("🔄 Reset to Defaults", use_container_width=True):
+    if st.button("🔄 Reset to Defaults", width='stretch'):
         current_settings = load_settings()
-            st.success("✅ Reset to defaults!")
+        st.success("✅ Reset to defaults!")
         st.rerun()
 
 # Display current settings

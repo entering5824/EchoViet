@@ -280,10 +280,10 @@ def run_chunked_transcription(run_fn):
                     per_part = seg_duration / num_parts if num_parts > 0 else seg_duration
                     
                     # Tạo readable segments với timestamps chính xác
-                    for i, sub_text in enumerate(sub_texts):
+                    for sub_idx, sub_text in enumerate(sub_texts):
                         # Timestamp tương đối trong segment gốc
-                        sub_start = seg_start + i * per_part
-                        sub_end = seg_start + (i + 1) * per_part
+                        sub_start = seg_start + sub_idx * per_part
+                        sub_end = seg_start + (sub_idx + 1) * per_part
                         
                         # Áp dụng post-processing cho tiếng Việt
                         processed_text = normalize_vietnamese(sub_text)
@@ -339,7 +339,11 @@ def run_chunked_transcription(run_fn):
                 temp_files_to_cleanup.append(tmp_name)
 
         # Update progress with detailed status
-        progress_percent = i / len(ranges)
+        # Ensure progress is always in [0.0, 1.0] range
+        if len(ranges) > 0:
+            progress_percent = min(i / len(ranges), 1.0)
+        else:
+            progress_percent = 1.0
         progress_bar.progress(progress_percent)
         status_text.text(f"Processing chunk {i}/{len(ranges)} ({progress_percent*100:.0f}%)...")
 

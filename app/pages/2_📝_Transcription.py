@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from app.components.layout import apply_custom_css, render_page_header
 from app.components.transcript_editor import render_transcript_editor
 from app.components.footer import render_footer
+from app.components.statistics_display import calculate_statistics
 
 from core.asr.model_registry import (
     get_all_models,
@@ -30,6 +31,7 @@ from core.asr.transcription_service import (
     format_time,
 )
 from core.nlp.post_processing import normalize_vietnamese, format_text
+from core.nlp.keyword_extraction import extract_keywords, simple_summarize
 from core.asr.quality_presets import (
     get_model_size_for_preset,
     get_preset_description,
@@ -453,10 +455,56 @@ if st.button("🚀 Start Transcription", type="primary", use_container_width=Tru
 # ================== OUTPUT ==================
 if st.session_state.transcript_text:
     st.divider()
+    
+    # Calculate statistics
+    duration = st.session_state.audio_info.get('duration', 0) if st.session_state.audio_info else 0
+    stats = calculate_statistics(
+        st.session_state.transcript_text,
+        duration,
+        None  # No speaker segments at transcription stage
+    )
+    
+    # Display quick statistics
+    st.subheader("📊 Thống kê nhanh")
+    col_stat1, col_stat2, col_stat3, col_stat4 = st.columns(4)
+    
+    with col_stat1:
+        st.markdown(f"""
+        <div class="stat-box">
+            <h3 style="margin:0; color: #1f4e79;">{stats['word_count']:,}</h3>
+            <p style="margin:0.5rem 0 0 0; color: #666;">Số từ</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_stat2:
+        st.markdown(f"""
+        <div class="stat-box">
+            <h3 style="margin:0; color: #1f4e79;">{stats['sentence_count']:,}</h3>
+            <p style="margin:0.5rem 0 0 0; color: #666;">Số câu</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_stat3:
+        st.markdown(f"""
+        <div class="stat-box">
+            <h3 style="margin:0; color: #1f4e79;">{stats['words_per_minute']:.1f}</h3>
+            <p style="margin:0.5rem 0 0 0; color: #666;">Tốc độ nói (WPM)</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_stat4:
+        st.markdown(f"""
+        <div class="stat-box">
+            <h3 style="margin:0; color: #1f4e79;">{stats['character_count']:,}</h3>
+            <p style="margin:0.5rem 0 0 0; color: #666;">Số ký tự</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.divider()
     st.subheader("📝 Transcript")
 
     st.text_area(
-        "Result",
+        "Kết quả transcription:",
         st.session_state.transcript_text,
         height=300,
         disabled=True,
@@ -467,10 +515,77 @@ if st.session_state.transcript_text:
         key_prefix="transcript",
     )
 
-    if st.button("💾 Save Edits"):
+    if st.button("💾 Lưu chỉnh sửa"):
         st.session_state.transcript_text = edited_text
-        st.success("✅ Saved")
+        st.success("✅ Đã lưu")
         st.rerun()
+
+    # Keywords and Summary section
+    st.divider()
+    st.subheader("🔑 Keywords & Summary")
+    
+    keyword_tab1, keyword_tab2 = st.tabs(["🔑 Keywords", "📄 Summary"])
+    
+    with keyword_tab1:
+        num_keywords = st.slider(
+            "Số lượng keywords:",
+            min_value=5,
+            max_value=30,
+            value=10,
+            help="Chọn số lượng keywords muốn hiển thị"
+        )
+        
+        if st.button("🔍 Extract Keywords", type="primary", use_container_width=True):
+            keyword_counts = extract_keywords(
+                st.session_state.transcript_text,
+                top_k=num_keywords,
+                return_with_counts=True,
+            )
+            
+            if keyword_counts:
+                # Display keywords as chips
+                tags_html = " ".join(
+                    [
+                        f'<span style="background-color: #e3f2fd; padding: 5px 10px; '
+                        f'border-radius: 15px; margin: 5px; display: inline-block; '
+                        f'font-weight: bold;">{kw} ({cnt})</span>'
+                        for kw, cnt in keyword_counts
+                    ]
+                )
+                st.markdown(tags_html, unsafe_allow_html=True)
+                
+                # Frequency table
+                st.markdown("**📊 Bảng tần suất:**")
+                import pandas as pd
+                try:
+                    freq_data = {
+                        "Keyword": [kw for kw, _ in keyword_counts],
+                        "Số lần xuất hiện": [cnt for _, cnt in keyword_counts],
+                    }
+                    df_keywords = pd.DataFrame(freq_data)
+                    st.dataframe(df_keywords, use_container_width=True, hide_index=True)
+                except ImportError:
+                    # Fallback if pandas not available
+                    for kw, cnt in keyword_counts:
+                        st.write(f"**{kw}**: {cnt} lần")
+            else:
+                st.info("Không tìm thấy keywords")
+    
+    with keyword_tab2:
+        num_sentences = st.slider(
+            "Số câu trong summary:",
+            min_value=1,
+            max_value=10,
+            value=3,
+            help="Chọn số câu tối đa trong summary"
+        )
+        
+        if st.button("📄 Tạo Summary", type="primary", use_container_width=True):
+            summary = simple_summarize(st.session_state.transcript_text, max_sentences=num_sentences)
+            if summary:
+                st.info(f"**Summary:** {summary}")
+            else:
+                st.info("Không thể tạo summary")
 
     st.divider()
     col1, col2 = st.columns(2)

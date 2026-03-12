@@ -140,12 +140,6 @@ Run evaluation script with audio files and matching `.txt` reference files in `t
 
 ---
 
-## Demo
-
-*(Add screenshot or demo link (e.g. Streamlit share URL, GIF of upload → transcript → export).)*
-
----
-
 ## Deployment
 
 - **Streamlit Cloud**: Main file path `app/main.py`; see `DEPLOYMENT.md`.

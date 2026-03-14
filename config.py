@@ -9,11 +9,27 @@ from pathlib import Path
 # Base directory
 BASE_DIR = Path(__file__).parent.absolute()
 
+# Optional: load from config/settings.yaml and config/model_config.yaml
+def _load_yaml_if_present():
+    data = {}
+    try:
+        import yaml
+        for name in ("settings.yaml", "model_config.yaml"):
+            p = BASE_DIR / "config" / name
+            if p.exists():
+                with open(p, "r", encoding="utf-8") as f:
+                    data[name] = yaml.safe_load(f) or {}
+    except Exception:
+        pass
+    return data
+
+_YAML_CONFIG = _load_yaml_if_present()
+
 class Config:
     """Application configuration"""
     
-    # Application
-    APP_NAME: str = os.getenv("APP_NAME", "Vietnamese Speech-to-Text System")
+    # Application (env overrides YAML)
+    APP_NAME: str = os.getenv("APP_NAME", (_YAML_CONFIG.get("settings.yaml") or {}).get("app_name") or "Vietnamese Speech-to-Text System")
     APP_ENV: str = os.getenv("APP_ENV", "development")
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     

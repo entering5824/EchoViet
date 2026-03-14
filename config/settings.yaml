@@ -1,0 +1,50 @@
+# Application
+app_name: "Vietnamese Speech-to-Text System"
+app_env: development
+debug: false
+
+# Streamlit
+streamlit:
+  server_port: 8501
+  server_address: "0.0.0.0"
+  browser_gather_usage_stats: false
+
+# API (FastAPI)
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+
+# Paths (relative to project root or env overrides)
+paths:
+  temp_dir: "temp"
+  export_dir: "data/transcripts"
+  uploads_dir: "data/uploads"
+  processed_dir: "data/processed"
+
+# Resource limits
+limits:
+  max_audio_duration_seconds: 3600
+  max_upload_size_mb: 200
+  max_memory_usage_mb: 8192
+  max_export_files: 100
+
+# Features
+features:
+  diarization_enabled: false
+
+# Logging
+logging:
+  level: INFO
+  file: null
+
+# Security
+security:
+  secret_key: null
+  allowed_origins: "*"
+
+# Development
+development:
+  development_mode: false
+  hot_reload: true
+  cleanup_temp_files: true

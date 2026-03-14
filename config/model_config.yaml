@@ -1,0 +1,32 @@
+# Whisper
+whisper:
+  default_model: base
+  cache_dir: null  # uses WHISPER_CACHE env or ~/.cache/whisper
+  language: vi
+
+# Wav2Vec (optional)
+wav2vec:
+  enabled: false
+  model_name: null
+
+# Cache directories (env overrides)
+cache:
+  transformers: null  # TRANSFORMERS_CACHE / HF_HOME
+  whisper: null       # WHISPER_CACHE
+
+# Device
+device:
+  use_gpu: true
+  cuda_visible_devices: null  # env CUDA_VISIBLE_DEVICES
+
+# ASR low-latency
+asr:
+  backend: whisper  # whisper | faster_whisper
+  faster_whisper_compute_type: int8  # default | float16 | int8
+
+# Translation (free models)
+translation:
+  default_model: nllb
+  nllb_model_id: facebook/nllb-200-distilled-600M
+  m2m100_model_id: facebook/m2m100_418M
+  seamless_m4t_model_id: facebook/hf-seamless-m4t-medium

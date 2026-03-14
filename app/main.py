@@ -65,12 +65,12 @@ Use the sidebar to navigate functions or access **Home Dashboard** to see an ove
 """
     )
     
-    # Link to Dashboard
-    if st.button("🏠 Go to Dashboard", type="primary"):
+    # Link to Upload (main flow)
+    if st.button("📤 Bắt đầu — Upload", type="primary"):
         try:
-            st.switch_page("pages/0_🏠_Home_Dashboard.py")
-        except:
-            st.info("💡 Dashboard page: `pages/0_🏠_Home_Dashboard.py`")
+            st.switch_page("pages/1_Upload.py")
+        except Exception:
+            st.info("💡 Trang Upload: `pages/1_Upload.py`")
 
 # =========================
 # 5️⃣ MAIN

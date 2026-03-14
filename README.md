@@ -1,7 +1,7 @@
 # EchoViet
 
 **Vietnamese Speech-to-Text and Automatic Meeting Transcription** — End-to-end ASR pipeline with Whisper, Streamlit UI, FastAPI serving, speaker diarization, and export (TXT, DOCX, PDF).
-
+![Home](images/Home_Dashboard.png)
 ---
 
 ## Problem Statement

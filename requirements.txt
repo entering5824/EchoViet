@@ -41,3 +41,6 @@ altair>=5.0.0
 
 # Gemini AI (Optional - for enhanced text improvement)
 google-generativeai>=0.3.0
+
+# Speaker diarization (optional; requires HF token)
+pyannote.audio>=3.0.0

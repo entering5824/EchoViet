@@ -13,7 +13,7 @@ from pathlib import Path
 from core.audio.ffmpeg_setup import ensure_ffmpeg
 ensure_ffmpeg(silent=True)
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -44,6 +44,8 @@ logger = logging.getLogger(__name__)
 
 from core.asr.transcription_service import load_whisper_model, transcribe_audio
 from core.audio.audio_processor import normalize_audio_to_wav
+from core.asr.streaming import buffer_to_float, stream_with_vad, STREAM_SR
+from core.nlp.punctuation_restoration import restore_punctuation
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -102,6 +104,47 @@ def get_model():
         raise
     finally:
         _model_loading = False
+
+
+@app.websocket("/ws/transcribe")
+async def ws_transcribe(websocket: WebSocket):
+    """
+    Streaming ASR: client sends binary audio chunks (PCM 16kHz 16-bit).
+    Send text message 'flush' to process current buffer and get transcript.
+    Server responds with JSON: {"type": "partial"|"final", "text": "..."}.
+    """
+    await websocket.accept()
+    buffer_list = []
+    try:
+        model = get_model()
+        if model is None:
+            await websocket.send_json({"type": "error", "text": "Model not loaded"})
+            return
+        while True:
+            data = await websocket.receive()
+            if "text" in data:
+                if data["text"] == "flush" and buffer_list:
+                    import numpy as np
+                    from core.asr.streaming import transcribe_segment
+                    audio = np.concatenate(buffer_list)
+                    buffer_list.clear()
+                    for text, is_final in stream_with_vad(model, audio, sr=STREAM_SR, language="vi"):
+                        await websocket.send_json({"type": "final" if is_final else "partial", "text": text})
+                    await websocket.send_json({"type": "final", "text": ""})
+                continue
+            if "bytes" in data:
+                chunk = data["bytes"]
+                if chunk:
+                    audio_chunk = buffer_to_float(chunk)
+                    buffer_list.append(audio_chunk)
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.exception("WebSocket error")
+        try:
+            await websocket.send_json({"type": "error", "text": str(e)})
+        except Exception:
+            pass
 
 
 @app.get("/")
@@ -193,16 +236,38 @@ async def transcribe(
         # Transcribe
         try:
             result = transcribe_audio(
-                model, 
-                norm_path, 
-                sr=sr, 
-                language=language, 
+                model,
+                norm_path,
+                sr=sr,
+                language=language,
                 task="transcribe"
             )
             text = result.get("text", "") if result else ""
+            segments = result.get("segments") if isinstance(result, dict) else []
         except Exception as e:
             logger.error(f"Transcription failed: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Transcription error: {str(e)}")
+
+        # Punctuation restoration (Vietnamese)
+        try:
+            text = restore_punctuation(text, use_model=True)
+        except Exception:
+            pass
+
+        # Optional: pyannote speaker diarization
+        diarization_result = None
+        if diarization and segments:
+            try:
+                from core.asr.diarization_pyannote import diarize, merge_transcript_with_diarization, format_diarized_transcript
+                diar_segments = diarize(norm_path)
+                if diar_segments:
+                    ws_segments = [{"start": s.get("start", 0), "end": s.get("end", 0), "text": s.get("text", "")} for s in segments]
+                    merged = merge_transcript_with_diarization(ws_segments, diar_segments)
+                    diarization_result = format_diarized_transcript(merged)
+                    diarization_result = restore_punctuation(diarization_result, use_model=True)
+                    text = diarization_result
+            except Exception as e:
+                logger.warning(f"Diarization skipped: {e}")
 
         # Cleanup temp files
         for temp_file in temp_files:
@@ -216,7 +281,7 @@ async def transcribe(
             "text": text,
             "language": result.get("language") if result else language,
             "segments": result.get("segments") if isinstance(result, dict) else None,
-            "diarization": None  # diarization stub; có thể tích hợp pyannote nếu có model
+            "diarization": diarization_result
         }
         
     except HTTPException:

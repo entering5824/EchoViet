@@ -1,6 +1,6 @@
 """Sidebar configuration: model, VAD, language, pipeline options."""
 import streamlit as st
-from models.model_manager import get_all_models, get_model_info
+from core.asr.model_registry import get_all_models, get_model_info
 
 
 def render_sidebar_config(key_prefix: str = "sidebar"):

@@ -125,7 +125,7 @@ digraph EchoVietUIWireframe {
 
     page [label="🏠 Home / Dashboard Page" shape=box style="rounded,bold,filled" fillcolor="#bbdefb"];
 
-    header         [label="Header\n- Logo\n- Title\n- Subtitle" fillcolor="#e3f2fd"];
+    header         [label="Header\n- Title\n- Subtitle" fillcolor="#e3f2fd"];
     quickStart     [label="Quick Start Guide\n- 3 steps description" fillcolor="#f1f8e9"];
     workflowSteps  [label="Workflow Steps (3 columns)\n1. Upload Audio\n2. Transcription\n3. Enhancement & Export" fillcolor="#f9fbe7"];
     pipeline       [label="Processing Pipeline Diagram" fillcolor="#fff3e0"];

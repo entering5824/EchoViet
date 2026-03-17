@@ -1,12 +1,12 @@
 """Orchestrate transcription: load model, run pipeline, format output."""
 from typing import Dict, List, Optional, Any
 
-from models.whisper_model import load_whisper_model, get_vietnamese_initial_prompt
+from core.asr.transcription_service import load_whisper_model, get_vietnamese_initial_prompt
 from core.transcriber import transcribe_with_vad_pipeline
 
 
 def load_whisper_model_cached(model_size: str = "base"):
-    """Load Whisper model (cached inside models.whisper_model). Returns (model, device)."""
+    """Load Whisper model (cached in core.asr.transcription_service). Returns (model, device)."""
     return load_whisper_model(model_size=model_size)
 
 
@@ -56,10 +56,11 @@ def transcribe_with_pipeline(
     window_max: float = 30.0,
     language: str = "vi",
     postprocess_options: Optional[dict] = None,
-    asr_backend: str = "whisper",
+    asr_backend: Optional[str] = None,
+    model_id: Optional[str] = None,
     compute_type: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
-    """Run full VAD + ASR pipeline. Returns dict with segments, text, duration. asr_backend: whisper | faster_whisper."""
+    """Run full VAD + ASR pipeline. model_id: whisper | faster_whisper | distil_whisper | whisper_large_v3_turbo | parakeet | moonshine."""
     return transcribe_with_vad_pipeline(
         audio_path,
         model_size=model_size,
@@ -69,6 +70,7 @@ def transcribe_with_pipeline(
         language=language,
         postprocess_options=postprocess_options,
         asr_backend=asr_backend,
+        model_id=model_id or asr_backend,
         compute_type=compute_type,
     )
 

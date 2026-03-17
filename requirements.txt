@@ -44,3 +44,6 @@ google-generativeai>=0.3.0
 
 # Speaker diarization (optional; requires HF token)
 pyannote.audio>=3.0.0
+
+# Keyword extraction TF-IDF (optional, for Analytics)
+scikit-learn>=1.0.0

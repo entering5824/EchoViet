@@ -11,7 +11,12 @@ def render_sidebar_config(key_prefix: str = "sidebar"):
         st.subheader("⚙️ Cấu hình")
         all_models = get_all_models()
         model_ids = list(all_models.keys())
-        selected_id = st.selectbox("ASR Model", model_ids, key=f"{key_prefix}_model_id")
+        selected_id = st.selectbox(
+            "ASR Model",
+            model_ids,
+            format_func=lambda mid: f"{all_models[mid].get('name', mid)}",
+            key=f"{key_prefix}_model_id"
+        )
         model_info = get_model_info(selected_id) or {}
         sizes = model_info.get("sizes", ["tiny", "base", "small"])
         default_size = model_info.get("default_size", "base")

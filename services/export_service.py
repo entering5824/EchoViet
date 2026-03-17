@@ -143,6 +143,27 @@ def export_srt(
     return "\n".join(lines).encode("utf-8"), filename
 
 
+def export_json(
+    segments: List[Dict[str, Any]],
+    transcript_text: str = "",
+    metadata: Optional[dict] = None,
+    filename: str = "transcript.json",
+) -> Tuple[bytes, str]:
+    """
+    Export segments and transcript to JSON. Useful for developers.
+    Returns (bytes, filename).
+    """
+    import json
+    out = {
+        "transcript": transcript_text,
+        "segments": segments,
+        "metadata": metadata or {},
+    }
+    if metadata:
+        out["metadata"]["exported_at"] = datetime.now().isoformat()
+    return json.dumps(out, ensure_ascii=False, indent=2).encode("utf-8"), filename
+
+
 def export_vtt(
     segments: List[Dict[str, Any]],
     filename: str = "subtitles.vtt",

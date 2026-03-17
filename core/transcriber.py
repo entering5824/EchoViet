@@ -1,10 +1,10 @@
-"""Speech-to-text pipeline: normalize -> VAD -> segment -> Whisper/Faster-Whisper -> post-process (no Streamlit)."""
+"""Speech-to-text pipeline: normalize -> VAD -> segment -> ASR (Whisper/Faster-Whisper/Parakeet/Moonshine) -> post-process."""
 import os
 from typing import List, Dict, Optional, Any
 
 from utils import audio_utils
-from models import model_manager
-from models.whisper_model import get_vietnamese_initial_prompt
+from core.asr import model_manager
+from core.asr.transcription_service import get_vietnamese_initial_prompt
 from core import summarizer
 
 
@@ -16,14 +16,17 @@ def transcribe_with_vad_pipeline(
     window_max: float = 30.0,
     language: str = "vi",
     postprocess_options: Optional[dict] = None,
-    asr_backend: str = "whisper",
+    asr_backend: Optional[str] = None,
+    model_id: Optional[str] = None,
     compute_type: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """
-    Run full pipeline: normalize audio -> VAD -> windows -> Whisper per window -> post-process.
-    Returns dict with keys: segments, text, duration, windows; or None on failure.
+    Run full pipeline: normalize audio -> VAD -> windows -> ASR per window -> post-process.
+    model_id: whisper | faster_whisper | distil_whisper | whisper_large_v3_turbo | parakeet | moonshine.
+    asr_backend: deprecated, use model_id instead.
     """
     postprocess_options = postprocess_options or {}
+    effective_model_id = (model_id or asr_backend or "whisper").lower()
 
     norm_path, sr, y = audio_utils.normalize_audio_to_wav(audio_path, target_sr=16000)
     try:
@@ -40,10 +43,9 @@ def transcribe_with_vad_pipeline(
             if not windows:
                 windows = [{"start": 0.0, "end": duration}]
 
-        asr_backend = (asr_backend or "whisper").lower()
         asr_model, _ = model_manager.get_asr_model(
+            model_id=effective_model_id,
             model_size=model_size,
-            backend=asr_backend,
             compute_type=compute_type,
         )
         if asr_model is None:
@@ -53,10 +55,13 @@ def transcribe_with_vad_pipeline(
         segments = []
         full_text_parts: List[str] = []
 
+        use_faster_whisper = effective_model_id in ("faster_whisper", "distil_whisper", "whisper_large_v3_turbo")
+        use_pipeline = effective_model_id in ("parakeet", "moonshine")
+
         for idx, w in enumerate(windows):
             wav_path, s_start, s_end = audio_utils.extract_window_audio(y, sr, w)
             try:
-                if asr_backend == "faster_whisper":
+                if use_faster_whisper:
                     from models.faster_whisper_model import transcribe as fw_transcribe
                     result = fw_transcribe(
                         asr_model,
@@ -68,6 +73,16 @@ def transcribe_with_vad_pipeline(
                     text = (result.get("text") or "").strip()
                     confidences = [seg.get("confidence_asr") for seg in fw_segments if seg.get("confidence_asr") is not None]
                     confidence_asr = sum(confidences) / len(confidences) if confidences else None
+                elif use_pipeline:
+                    out = asr_model(wav_path)
+                    if isinstance(out, dict):
+                        text = out.get("text") or out.get("transcription") or ""
+                        if not text and out.get("chunks"):
+                            text = out["chunks"][0].get("text", "")
+                    else:
+                        text = str(out) if out else ""
+                    text = (text or "").strip()
+                    confidence_asr = None
                 else:
                     result = asr_model.transcribe(
                         wav_path,

@@ -43,34 +43,24 @@ from core.auth.session import init_session
 def render_home():
     # Redirect to new Dashboard if available
     render_page_header(
-        "Designing and Developing a Vietnamese Speech to Text System for Automatic Meeting Transcription",
+        "Vietnamese Speech-to-Text for Meeting Transcription",
         None,
-        None,
-        show_logo=True
     )
 
     st.markdown(
         """
 ### 📋 Introduction
 
-This system allows you to convert Vietnamese speech to text automatically and accurately.
-
-### 🚀 Get Started
-Use the sidebar to navigate functions or access **Home Dashboard** to see an overview.
-
-### 🔧 Technology
-- Whisper
-- Librosa, PyDub
-- Streamlit
+Vietnamese Speech-to-Text for Meeting Transcription is a system that converts Vietnamese meeting audio into accurate text transcripts automatically, enabling searchable meeting records and reducing manual note-taking.
 """
     )
     
     # Link to Upload (main flow)
-    if st.button("📤 Bắt đầu — Upload", type="primary"):
+    if st.button("📤 Bắt đầu — Upload / Record", type="primary"):
         try:
-            st.switch_page("pages/1_Upload.py")
+            st.switch_page("pages/1_Upload_Record.py")
         except Exception:
-            st.info("💡 Trang Upload: `pages/1_Upload.py`")
+            st.info("💡 Trang: `pages/1_Upload_Record.py`")
 
 # =========================
 # 5️⃣ MAIN

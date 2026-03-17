@@ -5,6 +5,41 @@ import re
 from typing import List, Dict, Tuple, Union
 from collections import Counter
 
+def extract_keywords_tfidf(
+    text: str,
+    top_k: int = 10,
+) -> List[Tuple[str, float]]:
+    """
+    Extract keywords using TF-IDF (requires sklearn). Falls back to word frequency.
+    Returns list of (keyword, score).
+    """
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        import re
+        # Split into "documents" (sentences) for IDF
+        sentences = re.split(r"[.!?]+", text)
+        sentences = [s.strip() for s in sentences if len(s.strip()) > 5]
+        if not sentences:
+            sentences = [text] if text.strip() else []
+        if not sentences:
+            return []
+        vectorizer = TfidfVectorizer(
+            max_features=top_k * 2,
+            token_pattern=r"(?u)\b\w{2,}\b",  # Unicode word chars (Vietnamese OK)
+        )
+        try:
+            tfidf = vectorizer.fit_transform(sentences)
+        except ValueError:
+            return extract_keywords(text, top_k, return_with_counts=True)
+        scores = tfidf.toarray().sum(axis=0)
+        terms = vectorizer.get_feature_names_out()
+        ranked = sorted(zip(terms, scores), key=lambda x: -x[1])[:top_k]
+        return [(t, float(s)) for t, s in ranked if s > 0]
+    except ImportError:
+        freq = extract_keywords(text, top_k, return_with_counts=True)
+        return [(w, float(c)) for w, c in freq]
+
+
 def extract_keywords(
     text: str,
     top_k: int = 10,

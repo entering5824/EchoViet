@@ -28,14 +28,6 @@ def render_footer():
                    https://github.com/entering5824/EchoViet
                 </a>
             </div>
-            <div style="margin-top:12px;">
-                <span style="font-weight:600; font-size:17px; color:#f0e6b2;">Students:</span><br>
-                <span style="color:#e0e0e0;">
-                    • Phạm Nguyễn Minh Tú — phamtuofficial5824@gmail.com<br>
-                    • Trần Lê Hữu Nghĩa — nghíatlh22@uef.edu.vn<br>
-                    • Cao Minh Phú — phucm22@uef.edu.vn
-                </span>
-            </div>
         </div>
         """,
         unsafe_allow_html=True
@@ -58,7 +50,7 @@ def render_footer():
                  width="26"
                  style="margin-right:10px;">
             <div>
-                <b>Bùi Tiến Đức</b><br>
+                <b style="color:#f0e6b2;">Bùi Tiến Đức</b><br>
                 <a href="https://orcid.org/0000-0001-5174-3558"
                    target="_blank"
                    style="color:#0066cc; text-decoration:none;">
